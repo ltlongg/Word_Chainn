@@ -1,189 +1,444 @@
-# English Word Chain - Ultimate Edition
+# English Word Chain - Ultimate Edition v2.0
 
-Ultimate word chain game with vocabulary learning features, achievements, and AI opponents.
+Ultimate word chain game with authentication, multiple game modes, vocabulary learning, achievements, challenges, statistics, and study modes.
 
-## 🎮 Features
+## 🚀 What's New in v2.0
 
-### Core Gameplay
-- ⚔️ Play against AI with 3 difficulty levels (Easy, Medium, Hard)
-- ⏱️ 20-second timer per turn
-- 💚 3 attempts per game
-- 🎯 Real-time word validation via Dictionary API
-- 🌐 Vietnamese translations
+### ✨ Major Updates
+- **User Authentication System** - Register/Login with unique usernames
+- **Backend API** - Full-featured REST API with MongoDB
+- **8 Game Modes** - Multiple ways to play and learn
+- **Challenge System** - Daily, Weekly, and special challenges
+- **Comprehensive Statistics** - Track your progress with detailed analytics
+- **Study Modes** - Multiple learning tools including quizzes, flashcards, and more
+- **Spaced Repetition System** - Intelligent vocabulary review scheduling
 
-### Learning & Vocabulary
-- 📖 **Word Definitions**: Click any word in history to see:
-  - Phonetic pronunciation (IPA)
-  - Multiple meanings and parts of speech
-  - Example sentences
-  - Audio pronunciation
-- ⭐ **Favorites System**: Mark words to review later
-- 🔴 **Difficult Words**: Auto-marked when you make mistakes
-- 📚 **Vocabulary Management**:
-  - View all learned words
-  - Filter by favorites or difficult words
-  - Search functionality
-  - Track usage statistics
-  - Export to CSV
+## 🎮 Game Modes
 
-### Progression System
-- 🎖️ **Level System**: Earn XP to level up
-- 🏆 **11 Achievements** to unlock:
-  - First Victory
-  - Win Streaks (3, 5, 10)
-  - Vocabulary Milestones (50, 100, 200 words)
-  - Long Word (8+ letters)
-  - Speed Demon (< 3 minutes)
-  - Perfect Game (no mistakes)
-  - Hard Mode Master
+### 1. VS AI (Classic)
+- Play against AI opponent
+- 3 difficulty levels (Easy, Medium, Hard)
+- 20-second timer per turn
+- 3 attempts per game
 
-### Polish & UX
-- 🔊 **Sound Effects**:
-  - Click sounds
-  - Success chimes
-  - Error buzzes
-  - Victory fanfare
-  - Defeat sounds
-  - Timer ticking (last 5 seconds)
-  - Toggle on/off with persistent setting
-- ✨ **Animations**:
-  - Confetti on victory
-  - Shake on errors
-  - Fade in/out transitions
-  - Smooth XP bar fills
-  - Pulse effects
-- 💡 **Hints System**: Get 3 word suggestions per game (costs 10 XP)
-- 💾 **Auto-save**: All progress saved to localStorage
+### 2. Multiplayer Local
+- 2 real players on same device
+- No AI opponent
+- Pass-and-play gameplay
 
-## 📁 Project Structure
+### 3. Time Attack
+- 60 seconds to use maximum words
+- No turn limit
+- Score based on word count
+
+### 4. Survival Mode
+- Play until you can't think of a word
+- No time limit
+- Progressively challenging
+
+### 5. Practice Mode
+- Unlimited time
+- No attempts limit
+- Perfect for learning
+
+### 6. Endless Mode
+- No win/lose conditions
+- Just keep playing and scoring
+- Zen mode for vocabulary practice
+
+### 7. Chain Challenge
+- Words must increase in length
+- Start at 3 letters → 4 → 5 → 6...
+- Test your vocabulary depth
+
+### 8. Theme Mode
+- Category-specific words only
+- Themes: Animals, Food, Jobs, Nature, Technology, Sports
+- Learn specialized vocabulary
+
+## 🎯 Challenge System
+
+### Daily Challenges
+- New challenge every day
+- Tasks like:
+  - Use 5 words with 6+ letters
+  - Win 3 games
+  - Win 2 perfect games
+  - Learn 10 new words
+- Earn XP rewards
+
+### Weekly Challenges
+- Longer-term goals
+- Higher XP rewards
+- Examples:
+  - Win 10 games this week
+  - Learn 50 new words
+  - Score 500+ in Time Attack
+
+### Special Challenges
+- **Word of the Day** - Use a specific difficult word
+- **Letter Challenge** - Use 10 words starting with specific letter
+- **Speed Challenge** - Answer in X seconds, multiple times
+- **Achievement Challenges** - Unlock special achievements
+
+## 📊 Statistics Dashboard
+
+### Overall Stats
+- Total games played
+- Win/loss record and win rate
+- Total play time
+- Average game duration
+
+### Performance Tracking
+- **By Difficulty** - Win rates for Easy/Medium/Hard
+- **By Game Mode** - Stats for each mode
+- **Performance Chart** - Progress over last 30 days
+- **Progress Calendar** - Visual calendar showing play days
+
+### Word Analytics
+- Total words used
+- Unique words learned
+- Longest/shortest words
+- Average word length
+- Most used words
+- **Letter Frequency Analysis** - Most and least used starting letters
+
+### Response Time Tracking
+- Average response time
+- Fastest/slowest responses
+- Response time by difficulty
+
+### Session History
+- Detailed record of all games
+- Scores, XP earned, duration
+- Words used per session
+
+## 📚 Study & Learning Modes
+
+### 1. Quiz Mode
+- Multiple choice questions
+- Test definitions or word recognition
+- Adjustable difficulty
+- Instant feedback
+- Track accuracy
+
+### 2. Flashcard System
+- Interactive flashcards
+- Show word/definition/examples
+- Study by categories (due, favorites, difficult)
+- Swipe to next card
+
+### 3. Spelling Test
+- Listen to definition
+- Type the correct spelling
+- Check your accuracy
+- Great for memorization
+
+### 4. Pronunciation Practice
+- Text-to-Speech for all words
+- Listen and repeat
+- Perfect your pronunciation
+- Phonetic guides (IPA)
+
+### 5. Word Association Game
+- Link related words together
+- Build vocabulary connections
+- Fun and educational
+
+### 6. Synonym/Antonym Quiz
+- Test your knowledge of related words
+- Multiple choice format
+- Learn word relationships
+
+### 7. Personalized Study Plan
+- AI-generated daily plan
+- Based on your progress
+- Review recommendations
+- Learning targets
+
+### 8. Spaced Repetition System (SRS)
+- Intelligent review scheduling
+- SM-2 algorithm implementation
+- Words scheduled at optimal intervals
+- Tracks mastery level (0-5)
+- Auto-adjusts based on performance
+
+## 🏆 Achievements
+
+11 unlockable achievements:
+- **First Victory** - Win your first game (50 XP)
+- **Hot Streak** - Win 3 games in a row (100 XP)
+- **On Fire** - Win 5 games in a row (200 XP)
+- **Unstoppable** - Win 10 games in a row (500 XP)
+- **Word Collector** - Learn 50 unique words (75 XP)
+- **Wordsmith** - Learn 100 unique words (150 XP)
+- **Lexicon Master** - Learn 200 unique words (300 XP)
+- **Sesquipedalian** - Use a word with 8+ letters (50 XP)
+- **Speed Demon** - Win a game in under 3 minutes (100 XP)
+- **Flawless** - Win without any mistakes (200 XP)
+- **Hard Mode Master** - Win 10 games on hard difficulty (150 XP)
+
+## 💾 Technology Stack
+
+### Frontend
+- HTML5, CSS3 (Tailwind CSS)
+- Vanilla JavaScript (ES6+)
+- Canvas Confetti for animations
+- Modular architecture
+
+### Backend
+- Node.js + Express.js
+- MongoDB + Mongoose ODM
+- JWT authentication
+- bcryptjs for password hashing
+- RESTful API architecture
+
+### External APIs
+- Dictionary API - Word validation & definitions
+- MyMemory Translation API - Vietnamese translations
+- Datamuse API - Word suggestions
+
+## 🛠️ Setup Instructions
+
+### Prerequisites
+- Node.js 14+ and npm
+- MongoDB 4.4+ (local or MongoDB Atlas)
+- Modern web browser
+
+### Backend Setup
+
+1. Navigate to server directory:
+```bash
+cd server
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Create `.env` file:
+```bash
+cp .env.example .env
+```
+
+4. Update `.env` with your configuration:
+```env
+PORT=3000
+MONGODB_URI=mongodb://localhost:27017/wordchain
+JWT_SECRET=your-secret-key-here
+CLIENT_URL=http://localhost:8080
+```
+
+5. Start the server:
+```bash
+# Development mode with auto-reload
+npm run dev
+
+# OR Production mode
+npm start
+```
+
+Server will start on `http://localhost:3000`
+
+### Frontend Setup
+
+1. Open `index.html` in a web browser, OR
+
+2. Use a local web server (recommended):
+```bash
+# Using Python
+python -m http.server 8080
+
+# OR using npx
+npx http-server -p 8080
+```
+
+3. Open `http://localhost:8080` in your browser
+
+### First Time Use
+
+1. Click "Đăng ký ngay" (Register Now)
+2. Enter email, unique username, and password
+3. Click "Đăng ký" to create account
+4. Start playing!
+
+## 📖 API Documentation
+
+Full API documentation available at `/server/README.md`
+
+### Main Endpoints
+
+- **Authentication**: `/api/auth/*`
+- **User Management**: `/api/users/*`
+- **Games**: `/api/games/*`
+- **Vocabulary**: `/api/vocabulary/*`
+- **Challenges**: `/api/challenges/*`
+- **Statistics**: `/api/statistics/*`
+- **Study Modes**: `/api/study/*`
+
+See [Server README](server/README.md) for complete API documentation.
+
+## 🎨 Project Structure
 
 ```
-Word Chain/
-├── index.html              # New modular version (USE THIS)
-├── index_advanced.html     # Old monolithic version (deprecated)
+Word_Chainn/
+├── index.html              # Main application (with auth)
+├── index-old.html          # Backup of original version
+├── README.md               # This file
+├── CHANGELOG.md            # Version history
 ├── css/
-│   └── animations.css      # All CSS animations
+│   └── animations.css      # Custom animations
 ├── js/
-│   ├── audio.js           # Sound effects management
-│   ├── animations.js      # Animation functions
-│   ├── vocabulary.js      # Word storage & management
+│   ├── api.js             # API client for backend
+│   ├── auth.js            # Authentication manager
+│   ├── game.js            # Core game logic
 │   ├── player.js          # Progress & achievements
-│   ├── ui.js              # UI updates & modals
-│   └── game.js            # Core game logic
-└── README.md
+│   ├── vocabulary.js      # Word management
+│   ├── ui.js              # UI management
+│   ├── audio.js           # Sound effects
+│   └── animations.js      # Visual effects
+└── server/                 # Backend API
+    ├── package.json
+    ├── server.js          # Main server file
+    ├── .env               # Configuration (not in git)
+    ├── .env.example       # Configuration template
+    ├── config/
+    │   └── database.js    # MongoDB connection
+    ├── models/            # Database models
+    │   ├── User.model.js
+    │   ├── Game.model.js
+    │   ├── Vocabulary.model.js
+    │   ├── Challenge.model.js
+    │   └── Statistics.model.js
+    ├── controllers/       # Request handlers
+    │   ├── auth.controller.js
+    │   ├── user.controller.js
+    │   ├── game.controller.js
+    │   ├── vocabulary.controller.js
+    │   ├── challenge.controller.js
+    │   ├── statistics.controller.js
+    │   └── study.controller.js
+    ├── routes/            # API routes
+    │   ├── auth.routes.js
+    │   ├── user.routes.js
+    │   ├── game.routes.js
+    │   ├── vocabulary.routes.js
+    │   ├── challenge.routes.js
+    │   ├── statistics.routes.js
+    │   └── study.routes.js
+    └── middleware/
+        └── auth.middleware.js
 ```
 
-## 🔧 Module Breakdown
+## 🎯 Features Implemented
 
-### `audio.js` - AudioManager
-- Web Audio API sound synthesis
-- Toggle sound on/off
-- 7 different sound effects
-- Persistent settings
+### Core Features
+- ✅ User authentication (register, login, JWT)
+- ✅ Unique username system
+- ✅ Profile management
+- ✅ 8 different game modes
+- ✅ Challenge system (daily, weekly, special)
+- ✅ Comprehensive statistics tracking
+- ✅ Multiple study modes
+- ✅ Spaced repetition system
+- ✅ Letter frequency analysis
+- ✅ Performance charts
+- ✅ Progress calendar
+- ✅ Session history
+- ✅ Leaderboard system
 
-### `animations.js` - Animations
-- Confetti celebrations
-- Shake, fade, pulse effects
-- Smooth transitions
+### Backend Features
+- ✅ RESTful API with Express
+- ✅ MongoDB database
+- ✅ JWT authentication
+- ✅ Password hashing with bcrypt
+- ✅ Input validation
+- ✅ Error handling
+- ✅ CORS configuration
+- ✅ Security headers (Helmet)
 
-### `vocabulary.js` - VocabularyManager
-- Word storage with metadata
-- Favorites & difficult word tracking
-- Search & filter
-- CSV export
-- Dictionary API integration
+### Frontend Features
+- ✅ Responsive design
+- ✅ Authentication UI
+- ✅ API integration
+- ✅ Local storage migration to database
+- ✅ Real-time updates
+- ✅ Sound effects
+- ✅ Animations
+- ✅ Modal dialogs
 
-### `player.js` - PlayerManager
-- XP & leveling system
-- Achievement tracking
-- Progress persistence
-- Statistics
+## 🔜 Future Enhancements (Not Yet Implemented)
 
-### `ui.js` - UIManager
-- Status messages
-- Modal management
-- Word definition display
-- Vocabulary tab
-- History display
+The following features have backend support but need frontend UI implementation:
 
-### `game.js` - GameManager
-- Core game loop
-- Turn management
-- Timer & attempts
-- AI opponent logic
-- Difficulty settings (now changeable anytime!)
-- Hint system
+1. **Game Mode Selection UI** - Interface to choose between 8 game modes
+2. **Challenges Dashboard** - Visual dashboard for all challenges
+3. **Statistics Dashboard** - Interactive charts and graphs
+4. **Study Modes UI** - Complete interfaces for quiz, flashcards, etc.
+5. **Leaderboard Display** - Global rankings
+6. **Theme Mode Categories** - UI for selecting word categories
+7. **Multiplayer Local UI** - Player 1 vs Player 2 interface
+8. **Progress Calendar Visual** - Calendar view of play history
 
-## 🎯 Key Improvements
+## 🐛 Troubleshooting
 
-### 1. Fixed Difficulty Selection
-- **Old**: Could only change difficulty before game start, required page reload
-- **New**: Change difficulty anytime, even during game, auto-saved
+### Backend Issues
 
-### 2. Modular Architecture
-- **Old**: 1200+ lines in single HTML file
-- **New**: Clean separation of concerns across 6 modules
-- Easier to debug and extend
+**MongoDB Connection Error**
+- Ensure MongoDB is running (`mongod` or MongoDB service)
+- Check `MONGODB_URI` in `.env` file
+- For MongoDB Atlas, ensure IP is whitelisted
 
-### 3. Vocabulary Learning
-- **New**: Complete vocabulary management system
-- Click-to-define in history
-- Favorites & difficult words
-- Export functionality
+**Port Already in Use**
+- Change `PORT` in `.env` file
+- Or kill the process using port 3000
 
-### 4. Better UX
-- All data persists across sessions
-- Clickable word history
-- Improved feedback
-- Professional modals
+### Frontend Issues
 
-## 🚀 Getting Started
+**CORS Errors**
+- Ensure backend `CLIENT_URL` matches frontend URL
+- Check browser console for specific errors
 
-Simply open `index.html` in a modern browser. No build process required!
+**Authentication Fails**
+- Clear browser localStorage
+- Check network tab for API response errors
+- Verify backend server is running
 
-All features work offline except:
-- Word validation (Dictionary API)
-- Translations (MyMemory API)
-- AI word suggestions (Datamuse API)
+## 📝 Development Notes
 
-## 💾 Data Storage
+### Data Migration
+When you first log in with a new account, any vocabulary stored in localStorage will be automatically migrated to your server account.
 
-All data stored in browser's localStorage:
-- `soundEnabled`: Sound preferences
-- `gameDifficulty`: Selected difficulty
-- `wordChainProgress`: Player level, XP, achievements
-- `wordChainVocabulary`: All learned words, favorites, difficult words
+### Local vs Server Storage
+- Old version: All data in localStorage (browser-only)
+- New version: All data on server (accessible from any device)
 
-## 🎨 Technologies
+### Security
+- Passwords are hashed with bcryptjs
+- JWT tokens expire after 7 days
+- All protected routes require authentication
+- Input validation on both client and server
 
-- **Frontend**: HTML5, Tailwind CSS, Vanilla JavaScript
-- **Animations**: CSS3 animations + canvas-confetti library
-- **Audio**: Web Audio API (synthesized sounds)
-- **APIs**:
-  - Dictionary API (definitions)
-  - MyMemory Translation API
-  - Datamuse API (word suggestions)
+## 📄 License
 
-## 📝 Future Enhancements
+MIT License - Feel free to use and modify
 
-Potential additions:
-- Daily challenges
-- Multiplayer mode
-- Vocabulary flashcards
-- Spaced repetition system
-- Import/export progress
-- Custom word lists
-- Dark mode
+## 🙏 Credits
 
-## 🐛 Bug Fixes
+- Dictionary API: [dictionaryapi.dev](https://dictionaryapi.dev/)
+- Translation API: [MyMemory](https://mymemory.translated.net/)
+- Word Suggestions: [Datamuse API](https://www.datamuse.com/api/)
+- Confetti: [canvas-confetti](https://www.npmjs.com/package/canvas-confetti)
+- UI Framework: [Tailwind CSS](https://tailwindcss.com/)
 
-- ✅ Difficulty can now be changed anytime (no reload needed)
-- ✅ Modular code prevents global scope pollution
-- ✅ Improved error handling
-- ✅ Better mobile responsiveness
+## 📧 Support
+
+For issues or questions, please check:
+1. This README
+2. Server README at `/server/README.md`
+3. GitHub Issues
 
 ---
 
-**Version**: 2.0 (Ultimate Edition)
-**Last Updated**: 2025-01
-**License**: MIT
+**Version 2.0** - Major update with authentication, backend API, multiple game modes, challenges, statistics, and study modes.

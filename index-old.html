@@ -9,106 +9,13 @@
     <link rel="stylesheet" href="css/animations.css">
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-4">
-    <!-- Authentication Screen -->
-    <div id="authScreen" class="hidden w-full max-w-md">
-        <div class="bg-white rounded-2xl shadow-2xl p-8">
-            <div class="text-center mb-8">
-                <h1 class="text-4xl font-bold text-indigo-600 mb-2">🔗 Word Chain</h1>
-                <p class="text-gray-600">Learn English through Word Games</p>
-            </div>
-
-            <!-- Login Form -->
-            <div id="loginForm">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Đăng nhập</h2>
-                <form onsubmit="authManager.handleLogin(event)">
-                    <div class="mb-4">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                        <input type="email" id="loginEmail" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            placeholder="your@email.com">
-                    </div>
-                    <div class="mb-6">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Mật khẩu</label>
-                        <input type="password" id="loginPassword" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            placeholder="••••••••">
-                    </div>
-                    <div id="loginError" class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm"></div>
-                    <button type="submit" id="loginSubmitBtn"
-                        class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">
-                        Đăng nhập
-                    </button>
-                </form>
-                <div class="mt-6 text-center">
-                    <p class="text-gray-600">Chưa có tài khoản?
-                        <button onclick="authManager.showRegister()" class="text-indigo-600 font-semibold hover:text-indigo-700">
-                            Đăng ký ngay
-                        </button>
-                    </p>
-                </div>
-            </div>
-
-            <!-- Register Form -->
-            <div id="registerForm" class="hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Đăng ký tài khoản</h2>
-                <form onsubmit="authManager.handleRegister(event)">
-                    <div class="mb-4">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                        <input type="email" id="registerEmail" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            placeholder="your@email.com">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Username (duy nhất)</label>
-                        <input type="text" id="registerUsername" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            placeholder="coolplayer123"
-                            oninput="authManager.checkUsernameAvailability()"
-                            pattern="[a-zA-Z0-9_]{3,20}">
-                        <div id="usernameFeedback" class="text-xs mt-1"></div>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Mật khẩu (tối thiểu 6 ký tự)</label>
-                        <input type="password" id="registerPassword" required minlength="6"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            placeholder="••••••••">
-                    </div>
-                    <div class="mb-6">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Xác nhận mật khẩu</label>
-                        <input type="password" id="registerConfirmPassword" required minlength="6"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            placeholder="••••••••">
-                    </div>
-                    <div id="registerError" class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm"></div>
-                    <button type="submit" id="registerSubmitBtn"
-                        class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition">
-                        Đăng ký
-                    </button>
-                </form>
-                <div class="mt-6 text-center">
-                    <p class="text-gray-600">Đã có tài khoản?
-                        <button onclick="authManager.showLogin()" class="text-indigo-600 font-semibold hover:text-indigo-700">
-                            Đăng nhập
-                        </button>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main App Container (hidden until authenticated) -->
-    <div id="appContainer" class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl hidden">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl">
         <!-- Header với Level & XP -->
         <div class="mb-6">
-            <div class="flex justify-between items-center mb-2">
-                <h1 class="text-4xl font-bold text-indigo-600">
-                    🔗 English Word Chain
-                </h1>
-                <button onclick="authManager.logout()" class="text-sm text-red-600 hover:text-red-700 font-semibold">
-                    Đăng xuất
-                </button>
-            </div>
-            <p class="text-center text-gray-600 mb-4 text-sm">Ultimate Edition - Welcome <span class="user-username font-semibold">User</span>!</p>
+            <h1 class="text-4xl font-bold text-center text-indigo-600 mb-2">
+                🔗 English Word Chain
+            </h1>
+            <p class="text-center text-gray-600 mb-4 text-sm">Ultimate Edition - Learn & Master</p>
 
             <!-- Level & XP Bar -->
             <div class="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-4 mb-4">
@@ -381,8 +288,6 @@
     </div>
 
     <!-- Load JavaScript Modules -->
-    <script src="js/api.js"></script>
-    <script src="js/auth.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/animations.js"></script>
     <script src="js/vocabulary.js"></script>
@@ -423,18 +328,12 @@
         }
 
         // Initialize all modules on page load
-        window.addEventListener('DOMContentLoaded', async () => {
-            // Initialize authentication first
-            const isAuthenticated = await authManager.init();
-
-            if (isAuthenticated) {
-                // Only initialize game modules if authenticated
-                AudioManager.init();
-                VocabularyManager.init();
-                PlayerManager.load();
-                GameManager.init();
-                AudioManager.updateUI();
-            }
+        window.addEventListener('DOMContentLoaded', () => {
+            AudioManager.init();
+            VocabularyManager.init();
+            PlayerManager.load();
+            GameManager.init();
+            AudioManager.updateUI();
         });
     </script>
 </body>

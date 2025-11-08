@@ -6,9 +6,11 @@
     <title>Word Chain - Chơi Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/theme.css">
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+<body class="bg-gray-900 text-gray-100 min-h-screen">
     <!-- Authentication Screen (shown when not logged in) -->
     <div id="authScreen" class="hidden min-h-screen flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
@@ -101,6 +103,8 @@
         <!-- Navigation Bar -->
         <div id="navbar"></div>
 
+        <!-- Game Container (for game page) -->
+        <div id="gameContainer">
         <!-- Page Content -->
         <div class="max-w-7xl mx-auto px-4 py-6">
             <!-- Player Stats Card -->
@@ -270,7 +274,11 @@
                 </div>
             </div>
         </div>
-    </div>
+        </div> <!-- End Game Container -->
+
+        <!-- SPA Page Content Container (for other pages) -->
+        <div id="page-content" class="hidden"></div>
+    </div> <!-- End App Container -->
 
     <!-- Game Mode Selection Modal -->
     <div id="gameModeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -298,6 +306,10 @@
     <script src="js/ui.js"></script>
     <script src="js/gamemode.js"></script>
     <script src="js/game.js"></script>
+    <script src="js/challenges.js"></script>
+    <script src="js/statistics.js"></script>
+    <script src="js/study.js"></script>
+    <script src="js/achievements.js"></script>
 
     <script>
         window.addEventListener('DOMContentLoaded', async () => {

@@ -528,6 +528,66 @@ class StudyManager {
             </div>
         `;
     }
+
+    // Render full page for SPA
+    renderPage() {
+        return `
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-700">
+                    <h1 class="text-3xl font-bold text-indigo-400 mb-6">📚 Chế độ học tập</h1>
+
+                    <!-- Study Modes Grid -->
+                    <div id="studyModesContainer">
+                        ${this.renderStudyModes()}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Modal -->
+            <div id="quizModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div class="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-indigo-400">❓ Quiz Mode</h2>
+                        <button onclick="studyManager.closeQuiz()" class="text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
+                    </div>
+                    <div id="quizContent"></div>
+                </div>
+            </div>
+
+            <!-- Flashcard Modal -->
+            <div id="flashcardModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div class="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-indigo-400">🃏 Flashcards</h2>
+                        <button onclick="studyManager.closeFlashcards()" class="text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
+                    </div>
+                    <div id="flashcardContent"></div>
+                </div>
+            </div>
+
+            <!-- Spelling Test Modal -->
+            <div id="spellingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div class="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-indigo-400">✍️ Spelling Test</h2>
+                        <button onclick="studyManager.closeSpelling()" class="text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
+                    </div>
+                    <div id="spellingContent"></div>
+                </div>
+            </div>
+
+            <!-- Study Plan Modal -->
+            <div id="studyPlanModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div class="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-indigo-400">📋 Study Plan</h2>
+                        <button onclick="studyManager.closeStudyPlan()" class="text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
+                    </div>
+                    <div id="studyPlanContent"></div>
+                </div>
+            </div>
+        `;
+    }
 }
 
 // Create global instance

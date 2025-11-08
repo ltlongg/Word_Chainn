@@ -355,6 +355,39 @@ class ChallengesManager {
             container.innerHTML = '<div class="text-center py-8 text-red-500">Lỗi khi tải thử thách</div>';
         }
     }
+
+    // Render full page for SPA
+    async renderPage() {
+        return `
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-700">
+                    <h1 class="text-3xl font-bold text-indigo-400 mb-6">🎯 Thử thách</h1>
+
+                    <!-- Word of the Day -->
+                    <div id="wordOfDaySection" class="mb-8"></div>
+
+                    <!-- Challenges Tabs -->
+                    <div class="flex gap-2 mb-6 border-b border-gray-700">
+                        <button onclick="challengesManager.activeTab = 'active'; challengesManager.renderChallenges()"
+                            id="activeTab"
+                            class="px-6 py-3 font-semibold text-indigo-400 border-b-2 border-indigo-500">
+                            Đang hoạt động
+                        </button>
+                        <button onclick="challengesManager.activeTab = 'completed'; challengesManager.renderChallenges()"
+                            id="completedTab"
+                            class="px-6 py-3 font-semibold text-gray-400 hover:text-indigo-400">
+                            Đã hoàn thành
+                        </button>
+                    </div>
+
+                    <!-- Challenges Container -->
+                    <div id="challengesContainer">
+                        <div class="text-center py-8 text-gray-400">Đang tải...</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 }
 
 // Create global instance

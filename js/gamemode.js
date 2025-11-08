@@ -3,6 +3,8 @@ class GameModeManager {
     constructor() {
         this.currentMode = 'vs-ai';
         this.currentTheme = 'general';
+        this.selectedMode = null; // Temporarily selected mode (not applied yet)
+        this.selectedTheme = null; // Temporarily selected theme (not applied yet)
 
         this.modes = {
             'vs-ai': {
@@ -70,43 +72,86 @@ class GameModeManager {
         const modal = document.getElementById('gameModeModal');
         const grid = document.getElementById('gameModeGrid');
 
+        // Reset selected mode when opening modal
+        this.selectedMode = this.currentMode;
+        this.selectedTheme = this.currentTheme;
+
+        this.renderModeGrid();
+        this.renderConfirmButton();
+
+        modal.classList.remove('hidden');
+    }
+
+    renderModeGrid() {
+        const grid = document.getElementById('gameModeGrid');
         grid.innerHTML = '';
 
         for (const [modeId, mode] of Object.entries(this.modes)) {
             const card = document.createElement('div');
-            card.className = `bg-${mode.color}-50 border-2 border-${mode.color}-200 rounded-xl p-6 cursor-pointer hover:shadow-lg transition transform hover:scale-105`;
-            card.onclick = () => this.selectMode(modeId);
+            const isSelected = modeId === this.selectedMode;
+
+            card.className = `bg-${mode.color}-50 border-2 ${isSelected ? 'border-' + mode.color + '-500 ring-4 ring-' + mode.color + '-300' : 'border-' + mode.color + '-200'} rounded-xl p-6 cursor-pointer hover:shadow-lg transition transform hover:scale-105`;
+            card.onclick = () => this.selectModeTemp(modeId);
 
             card.innerHTML = `
                 <div class="text-center">
                     <div class="text-5xl mb-3">${mode.icon}</div>
                     <h3 class="font-bold text-lg text-${mode.color}-800 mb-2">${mode.name}</h3>
                     <p class="text-sm text-${mode.color}-600">${mode.description}</p>
-                    ${modeId === this.currentMode ? '<div class="mt-3 text-green-600 font-semibold">✓ Đã chọn</div>' : ''}
+                    ${isSelected ? '<div class="mt-3 text-green-600 font-semibold text-lg">✓ Đã chọn</div>' : ''}
                 </div>
             `;
 
             grid.appendChild(card);
         }
-
-        modal.classList.remove('hidden');
     }
 
-    selectMode(modeId) {
-        this.currentMode = modeId;
+    renderConfirmButton() {
+        const modal = document.getElementById('gameModeModal');
 
-        // Show immediate feedback
-        const mode = this.modes[modeId];
-        UIManager.showStatus(`✓ Đã chọn chế độ ${mode.icon} ${mode.name}!`, 'success');
+        // Remove old button if exists
+        const oldBtn = document.getElementById('confirmModeBtn');
+        if (oldBtn) oldBtn.remove();
+
+        // Add confirm button
+        const btnContainer = document.createElement('div');
+        btnContainer.id = 'confirmModeBtn';
+        btnContainer.className = 'mt-6';
+
+        const mode = this.modes[this.selectedMode];
+        btnContainer.innerHTML = `
+            <button onclick="gameModeManager.confirmModeSelection()"
+                class="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-bold py-4 px-6 rounded-xl text-lg shadow-lg transform transition hover:scale-105">
+                ✓ Xác nhận chuyển sang ${mode.icon} ${mode.name}
+            </button>
+        `;
+
+        const modalContent = modal.querySelector('.bg-white');
+        if (modalContent) {
+            modalContent.appendChild(btnContainer);
+        }
+    }
+
+    selectModeTemp(modeId) {
+        // Just select temporarily, don't apply yet
+        this.selectedMode = modeId;
         AudioManager.play('submit');
 
         // Show theme selector for theme mode
         if (modeId === 'theme') {
             this.showThemeSelection();
         } else {
-            this.closeModeSelection();
-            this.startGameWithMode();
+            this.selectedTheme = 'general';
+            // Hide theme selector if it was shown
+            const themeContainer = document.getElementById('themeSelectionContainer');
+            if (themeContainer) {
+                themeContainer.classList.add('hidden');
+            }
         }
+
+        // Re-render to update highlights
+        this.renderModeGrid();
+        this.renderConfirmButton();
     }
 
     showThemeSelection() {
@@ -119,14 +164,16 @@ class GameModeManager {
             if (themeId === 'general') continue; // Skip general for theme mode
 
             const card = document.createElement('div');
-            card.className = 'bg-white border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-orange-400 hover:shadow transition';
-            card.onclick = () => this.selectTheme(themeId);
+            const isSelected = themeId === this.selectedTheme;
+
+            card.className = `bg-white border-2 ${isSelected ? 'border-orange-500 ring-4 ring-orange-300' : 'border-gray-200'} rounded-lg p-4 cursor-pointer hover:border-orange-400 hover:shadow transition`;
+            card.onclick = () => this.selectThemeTemp(themeId);
 
             card.innerHTML = `
                 <div class="text-center">
                     <div class="text-4xl mb-2">${theme.icon}</div>
                     <h4 class="font-semibold text-gray-800">${theme.name}</h4>
-                    ${themeId === this.currentTheme ? '<div class="mt-2 text-green-600 text-sm">✓ Đã chọn</div>' : ''}
+                    ${isSelected ? '<div class="mt-2 text-green-600 text-sm font-semibold">✓ Đã chọn</div>' : ''}
                 </div>
             `;
 
@@ -136,62 +183,84 @@ class GameModeManager {
         container.classList.remove('hidden');
     }
 
-    selectTheme(themeId) {
-        this.currentTheme = themeId;
-
-        // Show immediate feedback for theme selection
-        const theme = this.themes[themeId];
-        UIManager.showStatus(`✓ Đã chọn chủ đề ${theme.icon} ${theme.name}!`, 'success');
+    selectThemeTemp(themeId) {
+        // Just select temporarily, don't apply yet
+        this.selectedTheme = themeId;
         AudioManager.play('submit');
 
-        document.getElementById('themeSelectionContainer').classList.add('hidden');
+        // Re-render theme grid to update highlights
+        this.showThemeSelection();
+
+        // Update confirm button text
+        this.renderConfirmButton();
+    }
+
+    confirmModeSelection() {
+        // Now actually apply the mode
+        this.currentMode = this.selectedMode;
+        this.currentTheme = this.selectedTheme;
+
+        const mode = this.modes[this.currentMode];
+
+        // Show confirmation
+        AudioManager.play('success');
+        UIManager.showStatus(`✓ Đã chuyển sang chế độ ${mode.icon} ${mode.name}!`, 'success');
+
+        // Close modal
         this.closeModeSelection();
+
+        // Update UI and start game
+        this.updateUIForMode();
         this.startGameWithMode();
     }
 
     closeModeSelection() {
         document.getElementById('gameModeModal').classList.add('hidden');
+
+        // Hide theme selector
+        const themeContainer = document.getElementById('themeSelectionContainer');
+        if (themeContainer) {
+            themeContainer.classList.add('hidden');
+        }
     }
 
     async startGameWithMode() {
         const mode = this.modes[this.currentMode];
-        UIManager.showStatus(`⏳ Đang khởi tạo chế độ ${mode.icon} ${mode.name}...`, 'info');
+
+        // Don't rely on backend - just start the game locally
+        UIManager.showStatus(`🎮 Đang khởi tạo chế độ ${mode.icon} ${mode.name}...`, 'info');
 
         try {
-            // Create game on server
-            const response = await api.createGame(
-                this.currentMode,
-                GameManager.difficulty,
-                this.currentTheme
-            );
-
-            if (response.success) {
-                GameManager.currentGameId = response.data._id;
+            // Set game mode on GameManager
+            if (typeof GameManager !== 'undefined') {
                 GameManager.currentMode = this.currentMode;
                 GameManager.currentTheme = this.currentTheme;
+            }
 
-                // Update UI based on mode
-                this.updateUIForMode();
+            // Small delay for better UX
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-                // Show success message with confetti
-                const successMsg = this.currentMode === 'theme'
-                    ? `🎉 Chế độ ${mode.icon} ${mode.name} - ${this.themes[this.currentTheme].icon} ${this.themes[this.currentTheme].name} đã sẵn sàng!`
-                    : `🎉 Chế độ ${mode.icon} ${mode.name} đã sẵn sàng!`;
+            // Show success message
+            const successMsg = this.currentMode === 'theme'
+                ? `🎉 Chế độ ${mode.icon} ${mode.name} - ${this.themes[this.currentTheme].icon} ${this.themes[this.currentTheme].name} đã sẵn sàng!`
+                : `🎉 Chế độ ${mode.icon} ${mode.name} đã sẵn sàng!`;
 
-                UIManager.showStatus(successMsg, 'success');
-                AudioManager.play('success');
+            UIManager.showStatus(successMsg, 'success');
+            AudioManager.play('success');
 
-                // Add visual feedback
-                if (typeof Animations !== 'undefined' && Animations.pulse) {
-                    Animations.pulse('currentModeInfo');
-                }
+            // Add visual feedback
+            if (typeof Animations !== 'undefined' && Animations.pulse) {
+                Animations.pulse('currentModeInfo');
+            }
 
-                // Start the game
+            // Start the game with new mode
+            if (typeof GameManager !== 'undefined' && GameManager.restartGame) {
                 GameManager.restartGame();
             }
+
         } catch (error) {
-            console.error('Failed to create game:', error);
-            UIManager.showStatus('❌ Lỗi tạo game. Vui lòng thử lại.', 'error');
+            console.error('Failed to start game:', error);
+            UIManager.showStatus('❌ Lỗi khởi tạo game. Vui lòng thử lại.', 'error');
             AudioManager.play('error');
         }
     }
@@ -199,6 +268,8 @@ class GameModeManager {
     updateUIForMode() {
         const modeInfo = document.getElementById('currentModeInfo');
         const mode = this.modes[this.currentMode];
+
+        if (!modeInfo) return;
 
         // Create prominent mode banner with Dark Mode styling
         modeInfo.innerHTML = `
@@ -230,6 +301,7 @@ class GameModeManager {
 
     updateGameRules() {
         const rulesEl = document.getElementById('gameRules');
+        if (!rulesEl) return;
 
         const rules = {
             'vs-ai': 'Chơi với AI. 20 giây/lượt. 3 lượt thử.',
@@ -243,7 +315,7 @@ class GameModeManager {
         };
 
         rulesEl.innerHTML = `
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+            <div class="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-3 text-sm text-blue-200">
                 <strong>📋 Luật chơi:</strong> ${rules[this.currentMode]}
             </div>
         `;

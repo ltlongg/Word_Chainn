@@ -6,7 +6,6 @@
     <title>English Word Chain - Ultimate Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="css/animations.css">
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-4">
@@ -123,27 +122,14 @@
                             <div class="text-xs">Wins: <span id="totalWins">0</span> | Streak: <span id="winStreak">0</span></div>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2">
-                        <button onclick="AudioManager.toggle()" id="soundToggle" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-lg transition">
+                    <div class="flex gap-2">
+                        <button onclick="AudioManager.toggle()" id="soundToggle" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg font-semibold shadow-lg transition">
                             🔊
                         </button>
-                        <button onclick="gameModeManager.showModeSelection()" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-lg transition">
-                            🎮 Chế độ
-                        </button>
-                        <button onclick="challengesManager.showDashboard()" class="relative bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-lg transition">
-                            🎯 Thử thách
-                            <span id="challengesBadge" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"></span>
-                        </button>
-                        <button onclick="statisticsManager.showDashboard()" class="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-lg transition">
-                            📊 Thống kê
-                        </button>
-                        <button onclick="studyManager.showStudyMenu()" class="bg-pink-500 hover:bg-pink-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-lg transition">
-                            📖 Học tập
-                        </button>
-                        <button onclick="UIManager.showVocabularyTab('all')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-lg transition">
+                        <button onclick="UIManager.showVocabularyTab('all')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold shadow-lg transition">
                             📚 Từ vựng
                         </button>
-                        <button onclick="showAchievements()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-lg transition">
+                        <button onclick="showAchievements()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-semibold shadow-lg transition">
                             🏆 Thành tựu
                         </button>
                     </div>
@@ -169,16 +155,6 @@
                         🔴 Khó
                     </button>
                 </div>
-            </div>
-
-            <!-- Current Mode Info -->
-            <div id="currentModeInfo" class="mb-4">
-                <!-- Will be populated by JavaScript -->
-            </div>
-
-            <!-- Game Rules -->
-            <div id="gameRules" class="mb-4">
-                <!-- Will be populated by JavaScript -->
             </div>
         </div>
 
@@ -403,201 +379,6 @@
             <p class="text-lg text-white opacity-90">Keep going!</p>
         </div>
     </div>
-    <!-- Game Mode Selection Modal -->
-    <div id="gameModeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-bold text-purple-600">🎮 Chọn chế độ chơi</h2>
-                <button onclick="gameModeManager.closeModeSelection()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div id="gameModeGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <!-- Will be populated by JavaScript -->
-            </div>
-            <div id="themeSelectionContainer" class="hidden mt-6">
-                <h3 class="text-xl font-bold text-gray-800 mb-4">🎨 Chọn chủ đề</h3>
-                <div id="themeGrid" class="grid grid-cols-3 md:grid-cols-4 gap-3">
-                    <!-- Will be populated by JavaScript -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Challenges Modal -->
-    <div id="challengesModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-bold text-orange-600">🎯 Thử thách</h2>
-                <button onclick="challengesManager.closeDashboard()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div id="challengesContainer">
-                <!-- Will be populated by JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Completed Challenges Modal -->
-    <div id="completedChallengesModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-green-600">✅ Thử thách đã hoàn thành</h2>
-                <button onclick="challengesManager.closeCompleted()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div id="completedChallengesList">
-                <!-- Will be populated by JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Statistics Modal -->
-    <div id="statisticsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-5xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-bold text-cyan-600">📊 Thống kê chi tiết</h2>
-                <button onclick="statisticsManager.closeDashboard()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div id="statisticsContainer">
-                <!-- Will be populated by JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Letter Frequency Modal -->
-    <div id="letterFrequencyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-indigo-600">🔤 Phân tích chữ cái</h2>
-                <button onclick="statisticsManager.closeLetterFrequency()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div id="letterFrequencyContent">
-                <!-- Will be populated by JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Session History Modal -->
-    <div id="sessionHistoryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-purple-600">📜 Lịch sử ván đấu</h2>
-                <button onclick="statisticsManager.closeSessionHistory()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div id="sessionHistoryContent">
-                <!-- Will be populated by JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Study Menu Modal -->
-    <div id="studyMenuModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-bold text-pink-600">📖 Chế độ học tập</h2>
-                <button onclick="studyManager.closeStudyMenu()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="studyManager.startQuiz()" class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-6 rounded-xl hover:shadow-xl transition">
-                    <div class="text-5xl mb-3">📝</div>
-                    <div class="font-bold text-lg">Quiz Mode</div>
-                    <div class="text-sm opacity-90">Trắc nghiệm từ vựng</div>
-                </button>
-                <button onclick="studyManager.startFlashcards()" class="bg-gradient-to-br from-purple-500 to-pink-600 text-white p-6 rounded-xl hover:shadow-xl transition">
-                    <div class="text-5xl mb-3">🎴</div>
-                    <div class="font-bold text-lg">Flashcards</div>
-                    <div class="text-sm opacity-90">Lật thẻ học từ</div>
-                </button>
-                <button onclick="studyManager.startSpellingTest()" class="bg-gradient-to-br from-green-500 to-teal-600 text-white p-6 rounded-xl hover:shadow-xl transition">
-                    <div class="text-5xl mb-3">✍️</div>
-                    <div class="font-bold text-lg">Spelling Test</div>
-                    <div class="text-sm opacity-90">Kiểm tra chính tả</div>
-                </button>
-                <button onclick="studyManager.showStudyPlan()" class="bg-gradient-to-br from-blue-500 to-cyan-600 text-white p-6 rounded-xl hover:shadow-xl transition">
-                    <div class="text-5xl mb-3">📅</div>
-                    <div class="font-bold text-lg">Study Plan</div>
-                    <div class="text-sm opacity-90">Kế hoạch học tập</div>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quiz Modal -->
-    <div id="quizModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-indigo-600">📝 Quiz Mode</h2>
-                <button onclick="studyManager.closeQuiz()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div id="quizContainer">
-                <!-- Will be populated by JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Flashcard Modal -->
-    <div id="flashcardModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-purple-600">🎴 Flashcards</h2>
-                <button onclick="studyManager.closeFlashcards()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div id="flashcardContainer">
-                <!-- Will be populated by JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Spelling Test Modal -->
-    <div id="spellingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-green-600">✍️ Spelling Test</h2>
-                <button onclick="studyManager.closeSpelling()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div id="spellingContainer">
-                <!-- Will be populated by JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Study Plan Modal -->
-    <div id="studyPlanModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-blue-600">📅 Kế hoạch học tập</h2>
-                <button onclick="studyManager.closeStudyPlan()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div id="studyPlanContainer">
-                <!-- Will be populated by JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <style>
-        /* Flashcard flip animation */
-        .flashcard-flip {
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-        }
-
-        .flashcard-flip.flipped {
-            transform: rotateY(180deg);
-        }
-
-        .flashcard-front, .flashcard-back {
-            backface-visibility: hidden;
-        }
-
-        .flashcard-back {
-            transform: rotateY(180deg);
-        }
-
-        .flashcard-flip.flipped .flashcard-front {
-            display: none;
-        }
-
-        .flashcard-flip.flipped .flashcard-back {
-            display: block !important;
-        }
-    </style>
 
     <!-- Load JavaScript Modules -->
     <script src="js/api.js"></script>
@@ -607,10 +388,6 @@
     <script src="js/vocabulary.js"></script>
     <script src="js/player.js"></script>
     <script src="js/ui.js"></script>
-    <script src="js/gamemode.js"></script>
-    <script src="js/challenges.js"></script>
-    <script src="js/statistics.js"></script>
-    <script src="js/study.js"></script>
     <script src="js/game.js"></script>
 
     <!-- Initialize Application -->
@@ -657,14 +434,6 @@
                 PlayerManager.load();
                 GameManager.init();
                 AudioManager.updateUI();
-
-                // Initialize new managers
-                await challengesManager.init();
-                await statisticsManager.init();
-
-                // Set default game mode
-                gameModeManager.currentMode = 'vs-ai';
-                gameModeManager.updateUIForMode();
             }
         });
     </script>

@@ -444,6 +444,90 @@ class StudyManager {
         div.textContent = text;
         return div.innerHTML;
     }
+
+    // ========== MULTI-PAGE RENDERING ==========
+
+    renderStudyModes() {
+        return `
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Quiz Mode -->
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl p-6 hover:shadow-lg transition cursor-pointer"
+                    onclick="studyManager.startQuiz('medium')">
+                    <div class="text-5xl mb-4 text-center">❓</div>
+                    <h3 class="text-xl font-bold text-blue-900 mb-2 text-center">Quiz Mode</h3>
+                    <p class="text-sm text-blue-700 text-center mb-4">Kiểm tra kiến thức từ vựng với các câu hỏi trắc nghiệm</p>
+                    <div class="text-center">
+                        <span class="inline-block bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+                            Bắt đầu Quiz
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Flashcards -->
+                <div class="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-xl p-6 hover:shadow-lg transition cursor-pointer"
+                    onclick="studyManager.startFlashcards('all')">
+                    <div class="text-5xl mb-4 text-center">🃏</div>
+                    <h3 class="text-xl font-bold text-green-900 mb-2 text-center">Flashcards</h3>
+                    <p class="text-sm text-green-700 text-center mb-4">Ôn tập từ vựng với thẻ ghi nhớ tương tác</p>
+                    <div class="text-center">
+                        <span class="inline-block bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+                            Bắt đầu Flashcards
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Spelling Test -->
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-xl p-6 hover:shadow-lg transition cursor-pointer"
+                    onclick="studyManager.startSpellingTest()">
+                    <div class="text-5xl mb-4 text-center">✍️</div>
+                    <h3 class="text-xl font-bold text-purple-900 mb-2 text-center">Spelling Test</h3>
+                    <p class="text-sm text-purple-700 text-center mb-4">Kiểm tra khả năng đánh vần từ vựng</p>
+                    <div class="text-center">
+                        <span class="inline-block bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+                            Bắt đầu Test
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Study Plan -->
+                <div class="bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-200 rounded-xl p-6 hover:shadow-lg transition cursor-pointer"
+                    onclick="studyManager.showStudyPlan()">
+                    <div class="text-5xl mb-4 text-center">📋</div>
+                    <h3 class="text-xl font-bold text-orange-900 mb-2 text-center">Study Plan</h3>
+                    <p class="text-sm text-orange-700 text-center mb-4">Xem kế hoạch học tập cá nhân hóa cho bạn</p>
+                    <div class="text-center">
+                        <span class="inline-block bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+                            Xem kế hoạch
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Pronunciation Practice -->
+                <div class="bg-gradient-to-br from-pink-50 to-pink-100 border-2 border-pink-200 rounded-xl p-6 hover:shadow-lg transition opacity-50">
+                    <div class="text-5xl mb-4 text-center">🔊</div>
+                    <h3 class="text-xl font-bold text-pink-900 mb-2 text-center">Pronunciation</h3>
+                    <p class="text-sm text-pink-700 text-center mb-4">Luyện phát âm với Text-to-Speech</p>
+                    <div class="text-center">
+                        <span class="inline-block bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+                            Sắp ra mắt
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Word Association -->
+                <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-200 rounded-xl p-6 hover:shadow-lg transition opacity-50">
+                    <div class="text-5xl mb-4 text-center">🔗</div>
+                    <h3 class="text-xl font-bold text-yellow-900 mb-2 text-center">Word Association</h3>
+                    <p class="text-sm text-yellow-700 text-center mb-4">Liên kết các từ có quan hệ với nhau</p>
+                    <div class="text-center">
+                        <span class="inline-block bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+                            Sắp ra mắt
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 }
 
 // Create global instance

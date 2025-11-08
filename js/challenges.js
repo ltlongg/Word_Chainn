@@ -4,12 +4,21 @@ class ChallengesManager {
         this.activeChallenges = [];
         this.completedChallenges = [];
         this.wordOfDay = null;
+        this.activeTab = 'active'; // For multi-page view
     }
 
     async init() {
         await this.loadActiveChallenges();
         await this.createDailyChallenge();
         await this.loadWordOfDay();
+
+        // Render on page if we're on challenges.html
+        const wordOfDaySection = document.getElementById('wordOfDaySection');
+        if (wordOfDaySection) {
+            wordOfDaySection.innerHTML = this.wordOfDay ? this.renderWordOfDay() : '';
+        }
+
+        await this.renderChallenges();
     }
 
     async loadActiveChallenges() {
@@ -252,6 +261,99 @@ class ChallengesManager {
         // This will be called after each word submission to update challenges
         // The backend handles most logic, we just need to refresh
         await this.loadActiveChallenges();
+    }
+
+    // New method for multi-page rendering
+    async renderChallenges() {
+        const container = document.getElementById('challengesContainer');
+        if (!container) return; // Not on challenges page
+
+        // Update tab styling
+        const activeTabBtn = document.getElementById('activeTab');
+        const completedTabBtn = document.getElementById('completedTab');
+
+        if (activeTabBtn && completedTabBtn) {
+            if (this.activeTab === 'active') {
+                activeTabBtn.className = 'px-6 py-3 font-semibold text-indigo-600 border-b-2 border-indigo-600';
+                completedTabBtn.className = 'px-6 py-3 font-semibold text-gray-500 hover:text-indigo-600';
+            } else {
+                activeTabBtn.className = 'px-6 py-3 font-semibold text-gray-500 hover:text-indigo-600';
+                completedTabBtn.className = 'px-6 py-3 font-semibold text-indigo-600 border-b-2 border-indigo-600';
+            }
+        }
+
+        if (this.activeTab === 'active') {
+            await this.renderActiveChallenges(container);
+        } else {
+            await this.renderCompletedChallenges(container);
+        }
+    }
+
+    async renderActiveChallenges(container) {
+        if (this.activeChallenges.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-12 text-gray-500">
+                    <p class="text-5xl mb-4">🎯</p>
+                    <p class="text-lg">Không có thử thách nào đang diễn ra</p>
+                </div>
+            `;
+            return;
+        }
+
+        const html = this.activeChallenges.map(challenge => this.renderChallenge(challenge)).join('');
+        container.innerHTML = `
+            <div class="grid gap-4">
+                ${html}
+            </div>
+        `;
+    }
+
+    async renderCompletedChallenges(container) {
+        try {
+            const response = await api.getCompletedChallenges(20);
+
+            if (response.success) {
+                this.completedChallenges = response.data;
+
+                if (this.completedChallenges.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-12 text-gray-500">
+                            <p class="text-5xl mb-4">🏆</p>
+                            <p class="text-lg">Chưa hoàn thành thử thách nào</p>
+                        </div>
+                    `;
+                } else {
+                    const html = this.completedChallenges.map(challenge => {
+                        const completedDate = new Date(challenge.completedAt).toLocaleDateString('vi-VN');
+
+                        return `
+                            <div class="bg-green-50 border-2 border-green-200 rounded-lg p-5 mb-3">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <div class="text-green-600 font-bold text-lg mb-1">✓ ${challenge.title}</div>
+                                        <div class="text-sm text-gray-600">${challenge.description}</div>
+                                        <div class="text-xs text-gray-500 mt-1">Hoàn thành: ${completedDate}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-bold text-green-600">+${challenge.rewards.xp} XP</div>
+                                        <div class="text-xs text-gray-500">${this.getChallengeTypeLabel(challenge.type)}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    container.innerHTML = `
+                        <div class="grid gap-4">
+                            ${html}
+                        </div>
+                    `;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load completed challenges:', error);
+            container.innerHTML = '<div class="text-center py-8 text-red-500">Lỗi khi tải thử thách</div>';
+        }
     }
 }
 

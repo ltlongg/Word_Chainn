@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thành tích - Word Chain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- Authentication Screen -->
+    <div id="authScreen" class="hidden">
+        <div class="min-h-screen flex items-center justify-center px-4">
+            <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+                <div class="text-center mb-8">
+                    <h1 class="text-4xl font-bold text-indigo-600 mb-2">🎮 Word Chain</h1>
+                    <p class="text-gray-600">Đăng nhập để xem thành tích</p>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="loginEmail" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
+                        <input type="password" id="loginPassword" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-105">
+                        Đăng nhập
+                    </button>
+                    <p class="text-center text-sm text-gray-600">
+                        Chưa có tài khoản? <a href="index.html" class="text-indigo-600 hover:underline">Quay về trang chủ</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <!-- Navigation Bar -->
+        <div id="navbar"></div>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h1 class="text-3xl font-bold text-indigo-600 mb-6">🏆 Thành tích</h1>
+
+                <!-- Player Progress Summary -->
+                <div id="playerProgress" class="mb-8">
+                    <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 mb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold text-indigo-700" id="playerName">Loading...</h2>
+                                <div class="flex items-center gap-4 mt-2">
+                                    <div class="text-gray-700">
+                                        <span class="font-semibold">Level:</span>
+                                        <span id="playerLevel" class="text-xl font-bold text-indigo-600">1</span>
+                                    </div>
+                                    <div class="text-gray-700">
+                                        <span class="font-semibold">XP:</span>
+                                        <span id="playerXP" class="text-xl font-bold text-purple-600">0</span>
+                                    </div>
+                                    <div class="text-gray-700">
+                                        <span class="font-semibold">Streak:</span>
+                                        <span id="playerStreak" class="text-xl font-bold text-orange-600">0</span> 🔥
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-6xl">🎯</div>
+                        </div>
+                        <!-- XP Progress Bar -->
+                        <div class="mt-4">
+                            <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                <span>Tiến độ lên cấp</span>
+                                <span id="xpProgress">0 / 100</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div id="xpBar" class="bg-gradient-to-r from-indigo-500 to-purple-500 h-3 rounded-full transition-all" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Achievements Grid -->
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">🏅 Tất cả thành tích</h3>
+                    <div id="achievementsContainer">
+                        <div class="text-center py-8 text-gray-500">Đang tải...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/navigation.js"></script>
+
+    <script>
+        // All available achievements
+        const ALL_ACHIEVEMENTS = [
+            { id: 'first_victory', name: 'Chiến thắng đầu tiên', description: 'Thắng ván đầu tiên', icon: '🎉', xp: 50 },
+            { id: 'hot_streak', name: 'Hot Streak', description: 'Thắng 3 ván liên tiếp', icon: '🔥', xp: 100 },
+            { id: 'on_fire', name: 'On Fire', description: 'Thắng 5 ván liên tiếp', icon: '🔥🔥', xp: 200 },
+            { id: 'unstoppable', name: 'Không thể cản', description: 'Thắng 10 ván liên tiếp', icon: '⚡', xp: 500 },
+            { id: 'word_collector', name: 'Người sưu tập từ', description: 'Học 50 từ vựng', icon: '📚', xp: 75 },
+            { id: 'wordsmith', name: 'Thợ rèn từ', description: 'Học 100 từ vựng', icon: '📖', xp: 150 },
+            { id: 'lexicon_master', name: 'Bậc thầy từ vựng', description: 'Học 200 từ vựng', icon: '🎓', xp: 300 },
+            { id: 'sesquipedalian', name: 'Sesquipedalian', description: 'Dùng từ có 8+ chữ cái', icon: '📏', xp: 50 },
+            { id: 'speed_demon', name: 'Ác quỷ tốc độ', description: 'Thắng dưới 3 phút', icon: '⚡', xp: 100 },
+            { id: 'flawless', name: 'Hoàn hảo', description: 'Thắng không sai lần nào', icon: '💎', xp: 200 },
+            { id: 'hard_mode_master', name: 'Bậc thầy Hard Mode', description: 'Thắng 10 ván ở độ khó Hard', icon: '💪', xp: 150 }
+        ];
+
+        class AchievementsManager {
+            constructor() {
+                this.userAchievements = [];
+            }
+
+            async init() {
+                await this.loadAchievements();
+                this.renderAchievements();
+                this.updatePlayerProgress();
+            }
+
+            async loadAchievements() {
+                try {
+                    const response = await api.getProfile();
+                    if (response.success) {
+                        this.userAchievements = response.data.achievements || [];
+                        this.user = response.data;
+                    }
+                } catch (error) {
+                    console.error('Failed to load achievements:', error);
+                }
+            }
+
+            renderAchievements() {
+                const container = document.getElementById('achievementsContainer');
+
+                const html = ALL_ACHIEVEMENTS.map(achievement => {
+                    const unlocked = this.userAchievements.some(a => a.achievementId === achievement.id);
+                    const unlockedData = this.userAchievements.find(a => a.achievementId === achievement.id);
+
+                    return `
+                        <div class="bg-${unlocked ? 'green' : 'gray'}-50 border border-${unlocked ? 'green' : 'gray'}-200 rounded-lg p-4 ${unlocked ? '' : 'opacity-50'}">
+                            <div class="flex items-start gap-4">
+                                <div class="text-4xl">${achievement.icon}</div>
+                                <div class="flex-1">
+                                    <div class="font-bold text-lg text-${unlocked ? 'green' : 'gray'}-800">
+                                        ${achievement.name}
+                                        ${unlocked ? '<span class="text-green-600 ml-2">✓</span>' : ''}
+                                    </div>
+                                    <div class="text-sm text-gray-600">${achievement.description}</div>
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        Phần thưởng: ${achievement.xp} XP
+                                        ${unlocked && unlockedData ? `| Mở khóa: ${new Date(unlockedData.unlockedAt).toLocaleDateString('vi-VN')}` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = `
+                    <div class="mb-4 text-sm text-gray-600">
+                        Đã mở khóa: <span class="font-bold text-green-600">${this.userAchievements.length}</span> / ${ALL_ACHIEVEMENTS.length}
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        ${html}
+                    </div>
+                `;
+            }
+
+            updatePlayerProgress() {
+                if (!this.user) return;
+
+                document.getElementById('playerName').textContent = this.user.username || 'Player';
+                document.getElementById('playerLevel').textContent = this.user.level || 1;
+                document.getElementById('playerXP').textContent = this.user.xp || 0;
+                document.getElementById('playerStreak').textContent = this.user.winStreak || 0;
+
+                // Calculate XP for next level
+                const currentLevel = this.user.level || 1;
+                const xpForNextLevel = currentLevel * 100;
+                const currentXP = this.user.xp || 0;
+                const xpInCurrentLevel = currentXP % 100;
+
+                document.getElementById('xpProgress').textContent = `${xpInCurrentLevel} / ${xpForNextLevel}`;
+                const progress = (xpInCurrentLevel / xpForNextLevel) * 100;
+                document.getElementById('xpBar').style.width = `${progress}%`;
+            }
+        }
+
+        const achievementsManager = new AchievementsManager();
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const isAuthenticated = await authManager.checkAuth();
+
+            if (!isAuthenticated) {
+                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+            } else {
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+
+                // Render navigation
+                navigationManager.renderNavbar(document.getElementById('navbar'));
+
+                // Load achievements
+                await achievementsManager.init();
+            }
+        });
+    </script>
+</body>
+</html>

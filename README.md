@@ -283,35 +283,47 @@ See [Server README](server/README.md) for complete API documentation.
 
 ```
 Word_Chainn/
-├── index.html              # Main application (with auth)
-├── index-old.html          # Backup of original version
-├── README.md               # This file
-├── CHANGELOG.md            # Version history
+├── index.html              # Main game page (with auth)
+├── challenges.html         # Challenges page
+├── statistics.html         # Statistics dashboard page
+├── study.html             # Study modes page
+├── vocabulary.html        # Vocabulary management page
+├── achievements.html      # Achievements page
+├── index-old-single-page.html  # Backup of single-page version
+├── README.md              # This file
+├── CHANGELOG.md           # Version history
+├── components/
+│   └── header.html        # Shared header template
 ├── css/
-│   └── animations.css      # Custom animations
+│   └── animations.css     # Custom animations
 ├── js/
-│   ├── api.js             # API client for backend
-│   ├── auth.js            # Authentication manager
-│   ├── game.js            # Core game logic
-│   ├── player.js          # Progress & achievements
-│   ├── vocabulary.js      # Word management
-│   ├── ui.js              # UI management
-│   ├── audio.js           # Sound effects
-│   └── animations.js      # Visual effects
-└── server/                 # Backend API
+│   ├── api.js            # API client for backend
+│   ├── auth.js           # Authentication manager
+│   ├── navigation.js     # Navigation bar component
+│   ├── game.js           # Core game logic
+│   ├── gamemode.js       # Game mode management
+│   ├── challenges.js     # Challenges manager
+│   ├── statistics.js     # Statistics dashboard
+│   ├── study.js          # Study modes
+│   ├── player.js         # Progress & achievements
+│   ├── vocabulary.js     # Word management
+│   ├── ui.js             # UI management
+│   ├── audio.js          # Sound effects
+│   └── animations.js     # Visual effects
+└── server/                # Backend API
     ├── package.json
-    ├── server.js          # Main server file
-    ├── .env               # Configuration (not in git)
-    ├── .env.example       # Configuration template
+    ├── server.js         # Main server file
+    ├── .env              # Configuration (not in git)
+    ├── .env.example      # Configuration template
     ├── config/
-    │   └── database.js    # MongoDB connection
-    ├── models/            # Database models
+    │   └── database.js   # MongoDB connection
+    ├── models/           # Database models
     │   ├── User.model.js
     │   ├── Game.model.js
     │   ├── Vocabulary.model.js
     │   ├── Challenge.model.js
     │   └── Statistics.model.js
-    ├── controllers/       # Request handlers
+    ├── controllers/      # Request handlers
     │   ├── auth.controller.js
     │   ├── user.controller.js
     │   ├── game.controller.js
@@ -319,7 +331,7 @@ Word_Chainn/
     │   ├── challenge.controller.js
     │   ├── statistics.controller.js
     │   └── study.controller.js
-    ├── routes/            # API routes
+    ├── routes/           # API routes
     │   ├── auth.routes.js
     │   ├── user.routes.js
     │   ├── game.routes.js
@@ -330,6 +342,23 @@ Word_Chainn/
     └── middleware/
         └── auth.middleware.js
 ```
+
+## 📄 Page Architecture
+
+The application uses a **multi-page architecture** with dedicated pages for each major feature:
+
+- **index.html** - Main game page with mode selection and gameplay
+- **challenges.html** - View and track daily, weekly, and special challenges
+- **statistics.html** - Comprehensive statistics dashboard with charts
+- **study.html** - Study modes including Quiz, Flashcards, Spelling Test
+- **vocabulary.html** - Browse and manage your vocabulary collection
+- **achievements.html** - View unlocked achievements and progress
+
+All pages share a common navigation bar component and require authentication. This structure provides:
+- ✅ Cleaner, more focused user experience
+- ✅ Faster page loads (only loads necessary JS for each page)
+- ✅ Better organization and maintainability
+- ✅ Easier navigation between features
 
 ## 🎯 Features Implemented
 
@@ -360,13 +389,15 @@ Word_Chainn/
 
 ### Frontend Features
 - ✅ Responsive design
+- ✅ Multi-page architecture with dedicated pages for each feature
+- ✅ Shared navigation component across all pages
 - ✅ Authentication UI
 - ✅ API integration
 - ✅ Local storage migration to database
 - ✅ Real-time updates
 - ✅ Sound effects
 - ✅ Animations
-- ✅ Modal dialogs
+- ✅ Interactive charts with Chart.js
 
 ## ✅ All Features Fully Implemented and Working!
 

@@ -72,13 +72,28 @@ const GameManager = {
         this.usedWords.clear();
         this.currentWord = '';
         this.isPlayerTurn = false;
-        this.playerAttemptsLeft = 3;
-        this.timeLeft = 20;
         this.wordsUsedThisGame = 0;
         this.perfectGame = true;
         this.gameStartTime = Date.now();
         this.gameInProgress = true;
         this.hintsRemaining = 3;
+
+        // Get dynamic config from game mode manager
+        const config = window.gameModeManager.getModeConfig();
+
+        // Set attempts based on config
+        if (config.hasAttempts) {
+            this.playerAttemptsLeft = config.maxAttempts;
+        } else {
+            this.playerAttemptsLeft = Infinity; // No attempts limit
+        }
+
+        // Set timer based on config
+        if (config.hasTimer) {
+            this.timeLeft = config.timerDuration;
+        } else {
+            this.timeLeft = 0; // No timer
+        }
 
         document.getElementById('history').innerHTML = '<p class="text-gray-400 text-center">Chưa có từ nào...</p>';
         document.getElementById('currentWord').textContent = '---';
@@ -91,10 +106,32 @@ const GameManager = {
         document.getElementById('hintBtn').disabled = false;
         document.getElementById('endBtn').disabled = false;
         document.getElementById('hintsContainer').classList.add('hidden');
-        UIManager.updateAttemptsDisplay(3);
-        UIManager.updateTimerDisplay(20);
+
+        // Update UI based on config
+        if (config.hasAttempts) {
+            UIManager.updateAttemptsDisplay(this.playerAttemptsLeft);
+            // Show attempts counter
+            const attemptsEl = document.getElementById('attempts');
+            if (attemptsEl) attemptsEl.classList.remove('hidden');
+        } else {
+            // Hide attempts counter for modes without attempts
+            const attemptsEl = document.getElementById('attempts');
+            if (attemptsEl) attemptsEl.classList.add('hidden');
+        }
+
+        if (config.hasTimer) {
+            UIManager.updateTimerDisplay(this.timeLeft);
+            // Show timer
+            const timerEl = document.getElementById('timer');
+            if (timerEl) timerEl.classList.remove('hidden');
+        } else {
+            // Hide timer for modes without timer
+            const timerEl = document.getElementById('timer');
+            if (timerEl) timerEl.classList.add('hidden');
+        }
+
         AudioManager.play('submit');
-        
+
         // Update difficulty UI to disable buttons during game
         this.updateDifficultyUI();
 
@@ -103,7 +140,9 @@ const GameManager = {
         if (playerStarts) {
             this.isPlayerTurn = true;
             UIManager.showStatus('Bạn chơi trước! Nhập từ tiếng Anh bất kỳ.', 'success');
-            this.startTimer();
+            if (config.hasTimer) {
+                this.startTimer();
+            }
         } else {
             this.isPlayerTurn = false;
             UIManager.showStatus('AI chơi trước!', 'info');
@@ -145,7 +184,16 @@ const GameManager = {
 
     startTimer() {
         this.stopTimer();
-        this.timeLeft = 20;
+
+        // Get config to check if this mode has timer
+        const config = window.gameModeManager.getModeConfig();
+
+        // Only start timer if mode requires it
+        if (!config.hasTimer) {
+            return;
+        }
+
+        this.timeLeft = config.timerDuration;
         UIManager.updateTimerDisplay(this.timeLeft);
 
         this.timerInterval = setInterval(() => {
@@ -169,21 +217,36 @@ const GameManager = {
     handleTimeout() {
         if (!this.isPlayerTurn) return;
 
-        this.playerAttemptsLeft--;
-        this.perfectGame = false;
-        UIManager.updateAttemptsDisplay(this.playerAttemptsLeft);
-        AudioManager.play('error');
-        Animations.shake('wordInput');
+        const config = window.gameModeManager.getModeConfig();
 
-        if (this.playerAttemptsLeft <= 0) {
-            this.endGame(false);
-            return;
+        // Only deduct attempts if mode has attempts system
+        if (config.hasAttempts) {
+            this.playerAttemptsLeft--;
+            this.perfectGame = false;
+            UIManager.updateAttemptsDisplay(this.playerAttemptsLeft);
+            AudioManager.play('error');
+            Animations.shake('wordInput');
+
+            if (this.playerAttemptsLeft <= 0) {
+                this.endGame(false);
+                return;
+            }
+
+            UIManager.showStatus(`⏰ Hết thời gian! Còn ${this.playerAttemptsLeft} lượt.`, 'error');
+        } else {
+            // For modes without attempts, just show timeout message and continue
+            AudioManager.play('error');
+            Animations.shake('wordInput');
+            UIManager.showStatus('⏰ Hết thời gian! Hãy thử lại!', 'error');
         }
 
-        UIManager.showStatus(`⏰ Hết thời gian! Còn ${this.playerAttemptsLeft} lượt.`, 'error');
         document.getElementById('wordInput').value = '';
         document.getElementById('wordInput').focus();
-        this.startTimer();
+
+        // Restart timer if config requires it
+        if (config.hasTimer) {
+            this.startTimer();
+        }
     },
 
     async aiTurn(isFirstTurn = false) {
@@ -322,21 +385,33 @@ const GameManager = {
             const dictResponse = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${playerWord}`);
 
             if (!dictResponse.ok) {
-                this.playerAttemptsLeft--;
-                this.perfectGame = false;
-                UIManager.updateAttemptsDisplay(this.playerAttemptsLeft);
-                AudioManager.play('error');
-                Animations.shake('wordInput');
+                const config = window.gameModeManager.getModeConfig();
 
-                // Mark as difficult
-                VocabularyManager.markDifficult(playerWord);
+                // Only deduct attempts if mode has attempts system
+                if (config.hasAttempts) {
+                    this.playerAttemptsLeft--;
+                    this.perfectGame = false;
+                    UIManager.updateAttemptsDisplay(this.playerAttemptsLeft);
+                    AudioManager.play('error');
+                    Animations.shake('wordInput');
 
-                if (this.playerAttemptsLeft <= 0) {
-                    this.endGame(false);
-                    return;
+                    // Mark as difficult
+                    VocabularyManager.markDifficult(playerWord);
+
+                    if (this.playerAttemptsLeft <= 0) {
+                        this.endGame(false);
+                        return;
+                    }
+
+                    UIManager.showStatus(`❌ Từ không hợp lệ! Còn ${this.playerAttemptsLeft} lượt.`, 'error');
+                } else {
+                    // For modes without attempts, just show error and continue
+                    AudioManager.play('error');
+                    Animations.shake('wordInput');
+                    VocabularyManager.markDifficult(playerWord);
+                    UIManager.showStatus('❌ Từ không hợp lệ! Hãy thử lại!', 'error');
                 }
 
-                UIManager.showStatus(`❌ Từ không hợp lệ! Còn ${this.playerAttemptsLeft} lượt.`, 'error');
                 this.isPlayerTurn = true;
                 document.getElementById('wordInput').disabled = false;
                 document.getElementById('submitBtn').disabled = false;

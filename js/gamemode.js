@@ -107,28 +107,48 @@ class GameModeManager {
     }
 
     renderConfirmButton() {
-        const modal = document.getElementById('gameModeModal');
-
         // Remove old button if exists
         const oldBtn = document.getElementById('confirmModeBtn');
         if (oldBtn) oldBtn.remove();
 
-        // Add confirm button
+        // Make sure selectedMode is valid
+        if (!this.selectedMode || !this.modes[this.selectedMode]) {
+            console.error('Invalid selectedMode:', this.selectedMode);
+            return;
+        }
+
+        // Add confirm button after theme grid or mode grid
+        const themeContainer = document.getElementById('themeSelectionContainer');
+        const modal = document.getElementById('gameModeModal');
+
         const btnContainer = document.createElement('div');
         btnContainer.id = 'confirmModeBtn';
-        btnContainer.className = 'mt-6';
+        btnContainer.className = 'mt-8 px-4';
 
         const mode = this.modes[this.selectedMode];
+        const themeText = this.selectedMode === 'theme' && this.selectedTheme !== 'general'
+            ? ` - ${this.themes[this.selectedTheme].icon} ${this.themes[this.selectedTheme].name}`
+            : '';
+
         btnContainer.innerHTML = `
-            <button onclick="gameModeManager.confirmModeSelection()"
-                class="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-bold py-4 px-6 rounded-xl text-lg shadow-lg transform transition hover:scale-105">
-                ✓ Xác nhận chuyển sang ${mode.icon} ${mode.name}
-            </button>
+            <div class="bg-gradient-to-r from-green-600 to-green-500 p-1 rounded-xl shadow-2xl">
+                <button onclick="gameModeManager.confirmModeSelection()"
+                    class="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-bold py-5 px-8 rounded-xl text-xl shadow-lg transform transition hover:scale-105 flex items-center justify-center gap-3">
+                    <span class="text-3xl">✓</span>
+                    <span>Xác nhận chuyển sang ${mode.icon} ${mode.name}${themeText}</span>
+                </button>
+            </div>
+            <p class="text-center text-gray-400 text-sm mt-3">Nhấn nút trên để áp dụng chế độ mới</p>
         `;
 
-        const modalContent = modal.querySelector('.bg-white');
-        if (modalContent) {
-            modalContent.appendChild(btnContainer);
+        // Insert after the theme container if visible, otherwise after mode grid
+        if (themeContainer && !themeContainer.classList.contains('hidden')) {
+            themeContainer.insertAdjacentElement('afterend', btnContainer);
+        } else {
+            const modeGrid = document.getElementById('gameModeGrid');
+            if (modeGrid) {
+                modeGrid.insertAdjacentElement('afterend', btnContainer);
+            }
         }
     }
 
@@ -201,10 +221,14 @@ class GameModeManager {
         this.currentTheme = this.selectedTheme;
 
         const mode = this.modes[this.currentMode];
+        const themeText = this.currentMode === 'theme'
+            ? ` - ${this.themes[this.currentTheme].icon} ${this.themes[this.currentTheme].name}`
+            : '';
 
-        // Show confirmation
+        // Show BIG success notification
         AudioManager.play('success');
-        UIManager.showStatus(`✓ Đã chuyển sang chế độ ${mode.icon} ${mode.name}!`, 'success');
+        const successMsg = `🎉 Chọn chế độ ${mode.icon} ${mode.name}${themeText} thành công!`;
+        UIManager.showStatus(successMsg, 'success');
 
         // Close modal
         this.closeModeSelection();

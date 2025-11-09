@@ -135,18 +135,29 @@ const GameManager = {
         // Update difficulty UI to disable buttons during game
         this.updateDifficultyUI();
 
-        const playerStarts = Math.random() < 0.5;
+        // Check if this mode has AI
+        if (config.hasAI) {
+            // For AI modes, randomly decide who starts
+            const playerStarts = Math.random() < 0.5;
 
-        if (playerStarts) {
+            if (playerStarts) {
+                this.isPlayerTurn = true;
+                UIManager.showStatus('Bạn chơi trước! Nhập từ tiếng Anh bất kỳ.', 'success');
+                if (config.hasTimer) {
+                    this.startTimer();
+                }
+            } else {
+                this.isPlayerTurn = false;
+                UIManager.showStatus('AI chơi trước!', 'info');
+                await this.aiTurn(true);
+            }
+        } else {
+            // For non-AI modes, player always starts
             this.isPlayerTurn = true;
-            UIManager.showStatus('Bạn chơi trước! Nhập từ tiếng Anh bất kỳ.', 'success');
+            UIManager.showStatus('Bắt đầu! Nhập từ tiếng Anh bất kỳ.', 'success');
             if (config.hasTimer) {
                 this.startTimer();
             }
-        } else {
-            this.isPlayerTurn = false;
-            UIManager.showStatus('AI chơi trước!', 'info');
-            await this.aiTurn(true);
         }
     },
 
@@ -425,8 +436,13 @@ const GameManager = {
             const transData = await transResponse.json();
             const translation = transData.responseData.translatedText;
 
-            this.playerAttemptsLeft = 3;
-            UIManager.updateAttemptsDisplay(this.playerAttemptsLeft);
+            // Reset attempts based on mode config (only if mode has attempts system)
+            const config = window.gameModeManager.getModeConfig();
+            if (config.hasAttempts) {
+                this.playerAttemptsLeft = config.maxAttempts;
+                UIManager.updateAttemptsDisplay(this.playerAttemptsLeft);
+            }
+
             this.stopTimer();
             AudioManager.play('success');
             Animations.pulse('currentWord');
@@ -466,19 +482,36 @@ const GameManager = {
                 PlayerManager.addXP(wordLengthXP, `Long word bonus (${playerWord.length} letters)`);
             }
 
-            UIManager.showStatus('✅ Tuyệt! Đang đợi AI...', 'success');
-
             this.currentWord = playerWord;
-            this.isPlayerTurn = false;
-            setTimeout(() => {
-                this.checkIfWordsAvailable(playerWord.slice(-1)).then(canAIContinue => {
-                    if (!canAIContinue) {
-                        this.endGame(true);
-                    } else {
-                        this.aiTurn(false);
-                    }
-                });
-            }, 1000);
+
+            // Check if this mode has AI
+            const config = window.gameModeManager.getModeConfig();
+            if (config.hasAI) {
+                UIManager.showStatus('✅ Tuyệt! Đang đợi AI...', 'success');
+                this.isPlayerTurn = false;
+                setTimeout(() => {
+                    this.checkIfWordsAvailable(playerWord.slice(-1)).then(canAIContinue => {
+                        if (!canAIContinue) {
+                            this.endGame(true);
+                        } else {
+                            this.aiTurn(false);
+                        }
+                    });
+                }, 1000);
+            } else {
+                // For non-AI modes (like multiplayer, time-attack), player continues or switches turn
+                UIManager.showStatus('✅ Tuyệt! Tiếp tục...', 'success');
+                this.isPlayerTurn = true;
+                document.getElementById('wordInput').value = '';
+                document.getElementById('wordInput').disabled = false;
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('wordInput').focus();
+
+                // Restart timer if mode has timer
+                if (config.hasTimer) {
+                    this.startTimer();
+                }
+            }
 
         } catch (error) {
             console.error('Error:', error);

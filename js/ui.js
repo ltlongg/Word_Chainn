@@ -30,7 +30,7 @@ const UIManager = {
     },
 
     // Add word to history
-    addToHistory(word, translation, player, onClick = null, sentence = null, bonuses = []) {
+    addToHistory(word, translation, player, onClick = null, sentence = null, bonuses = [], sentenceTranslation = null) {
         const historyDiv = document.getElementById('history');
         if (document.querySelectorAll('#history > div').length === 0) {
             historyDiv.innerHTML = '';
@@ -47,8 +47,19 @@ const UIManager = {
         let bonusesBadges = '';
         if (bonuses && bonuses.length > 0) {
             bonusesBadges = `<div class="mt-2 flex gap-1 flex-wrap">${bonuses.map(b =>
-                `<span class="text-xs px-2 py-1 rounded-full ${b.type === 'toeic' ? 'bg-yellow-400 text-yellow-900' : 'bg-blue-400 text-blue-900'} font-semibold">${b.label}</span>`
+                `<span class="text-xs px-2 py-1 rounded-full ${b.type === 'toeic' ? 'bg-yellow-400 text-yellow-900' : b.type === 'sentence' ? 'bg-green-400 text-green-900' : 'bg-blue-400 text-blue-900'} font-semibold">${b.label}</span>`
             ).join('')}</div>`;
+        }
+
+        // Build sentence display
+        let sentenceDisplay = '';
+        if (sentence) {
+            sentenceDisplay = `
+                <div class="mt-2 bg-white bg-opacity-50 rounded p-2 border border-gray-300">
+                    <div class="text-sm text-gray-800">📝 <span class="font-medium">${sentence}</span></div>
+                    ${sentenceTranslation ? `<div class="text-xs text-gray-600 mt-1 italic">🇻🇳 ${sentenceTranslation}</div>` : ''}
+                </div>
+            `;
         }
 
         entry.innerHTML = `
@@ -57,7 +68,7 @@ const UIManager = {
                 <span class="text-xs text-gray-600">${player}</span>
             </div>
             <div class="text-sm text-gray-700 italic">${translation}</div>
-            ${sentence ? `<div class="text-sm text-gray-600 mt-1">📝 "${sentence}"</div>` : ''}
+            ${sentenceDisplay}
             ${bonusesBadges}
         `;
         historyDiv.appendChild(entry);

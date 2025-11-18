@@ -334,6 +334,20 @@ const GameManager = {
             const transData = await transResponse.json();
             const aiTranslation = transData.responseData.translatedText;
 
+            // Generate sentence for AI in Sentence Mode
+            let aiSentence = null;
+            let aiSentenceTranslation = null;
+
+            if (this.currentGameMode === 'sentence') {
+                aiSentence = await this.generateSentenceForWord(aiWord);
+                if (aiSentence) {
+                    // Translate the sentence
+                    const sentTransResponse = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(aiSentence)}&langpair=en|vi`);
+                    const sentTransData = await sentTransResponse.json();
+                    aiSentenceTranslation = sentTransData.responseData.translatedText;
+                }
+            }
+
             this.usedWords.add(aiWord);
             this.wordsUsedThisGame++;
             document.getElementById('wordCount').textContent = this.wordsUsedThisGame;
@@ -389,8 +403,15 @@ const GameManager = {
                 document.getElementById('revealWordBtn').disabled = false;
                 UIManager.addToHistory(hiddenWord, '??? (Hidden)', 'AI', null);
             } else {
-                UIManager.displayWord(aiWord, aiTranslation);
-                UIManager.addToHistory(aiWord, aiTranslation, 'AI', (word) => UIManager.showWordDefinition(word));
+                if (this.currentGameMode === 'sentence' && aiSentence) {
+                    // Display sentence translation too
+                    const displayTranslation = `${aiTranslation} | 📝 ${aiSentenceTranslation || aiSentence}`;
+                    UIManager.displayWord(aiWord, displayTranslation);
+                    UIManager.addToHistory(aiWord, aiTranslation, 'AI', (word) => UIManager.showWordDefinition(word), aiSentence, [], aiSentenceTranslation);
+                } else {
+                    UIManager.displayWord(aiWord, aiTranslation);
+                    UIManager.addToHistory(aiWord, aiTranslation, 'AI', (word) => UIManager.showWordDefinition(word));
+                }
             }
 
             // Save to vocabulary
@@ -500,13 +521,39 @@ const GameManager = {
                 return;
             }
 
-            // Check if sentence contains the word
-            if (!sentence.toLowerCase().includes(playerWord)) {
+            // Check if sentence contains the word (word boundary check)
+            const wordRegex = new RegExp(`\\b${playerWord}\\b`, 'i');
+            if (!wordRegex.test(sentence)) {
                 UIManager.showStatus('⚠️ Sentence must contain the word!', 'error');
                 AudioManager.play('error');
                 Animations.shake('wordInput');
                 this.startTimer();
                 return;
+            }
+
+            // Check grammar using LanguageTool API
+            UIManager.showStatus('🔍 Checking grammar...', 'loading');
+            const grammarCheck = await this.checkGrammar(sentence);
+
+            if (grammarCheck.hasErrors) {
+                const errorMsg = `⚠️ Grammar issues found: ${grammarCheck.errors.slice(0, 2).join(', ')}`;
+                UIManager.showStatus(errorMsg, 'error');
+                AudioManager.play('error');
+                Animations.shake('wordInput');
+
+                // Still allow them to continue but show warning
+                setTimeout(() => {
+                    UIManager.showStatus('⚠️ Grammar warning shown. Continue? (Press Submit again)', 'info');
+                }, 2000);
+
+                // Mark that grammar was checked
+                if (!input.dataset.grammarChecked) {
+                    input.dataset.grammarChecked = 'true';
+                    this.startTimer();
+                    return;
+                }
+                // If they press submit again after warning, allow it
+                delete input.dataset.grammarChecked;
             }
         } else {
             playerWord = rawInput.toLowerCase();
@@ -574,6 +621,14 @@ const GameManager = {
             const transData = await transResponse.json();
             const translation = transData.responseData.translatedText;
 
+            // Translate sentence if in Sentence Mode
+            let sentenceTranslation = null;
+            if (this.currentGameMode === 'sentence' && sentence) {
+                const sentTransResponse = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(sentence)}&langpair=en|vi`);
+                const sentTransData = await sentTransResponse.json();
+                sentenceTranslation = sentTransData.responseData.translatedText;
+            }
+
             this.playerAttemptsLeft = 3;
             UIManager.updateAttemptsDisplay(this.playerAttemptsLeft);
             this.stopTimer();
@@ -590,7 +645,13 @@ const GameManager = {
                 UIManager.displayWord(this.currentWord, translation);
                 this.currentWordHidden = false;
             } else {
-                UIManager.displayWord(playerWord, translation);
+                if (this.currentGameMode === 'sentence' && sentenceTranslation) {
+                    // Display with sentence translation
+                    const displayTranslation = `${translation} | 📝 ${sentenceTranslation}`;
+                    UIManager.displayWord(playerWord, displayTranslation);
+                } else {
+                    UIManager.displayWord(playerWord, translation);
+                }
             }
 
             // Check for bonuses
@@ -625,7 +686,7 @@ const GameManager = {
             }
 
             // Add to history with sentence and bonuses
-            UIManager.addToHistory(playerWord, translation, 'Player', (word) => UIManager.showWordDefinition(word), sentence, bonuses);
+            UIManager.addToHistory(playerWord, translation, 'Player', (word) => UIManager.showWordDefinition(word), sentence, bonuses, sentenceTranslation);
             input.value = '';
 
             // Save to vocabulary
@@ -918,5 +979,103 @@ const GameManager = {
 
         // Disable reveal button
         document.getElementById('revealWordBtn').disabled = true;
+    },
+
+    // Generate a simple sentence using the word
+    async generateSentenceForWord(word) {
+        // Simple sentence templates
+        const templates = [
+            `I like ${word} very much.`,
+            `The ${word} is very important.`,
+            `We need ${word} for this task.`,
+            `She uses ${word} every day.`,
+            `This ${word} is really good.`,
+            `Many people love ${word}.`,
+            `You should try ${word}.`,
+            `They bought a new ${word}.`,
+            `My favorite ${word} is here.`,
+            `Everyone needs ${word}.`
+        ];
+
+        // Try to get definition to make better sentence
+        try {
+            const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+            if (response.ok) {
+                const data = await response.json();
+                const partOfSpeech = data[0]?.meanings[0]?.partOfSpeech;
+
+                // Better templates based on part of speech
+                if (partOfSpeech === 'verb') {
+                    const verbTemplates = [
+                        `People often ${word} in the morning.`,
+                        `I like to ${word} every day.`,
+                        `They ${word} together regularly.`,
+                        `We should ${word} more often.`
+                    ];
+                    return verbTemplates[Math.floor(Math.random() * verbTemplates.length)];
+                } else if (partOfSpeech === 'adjective') {
+                    const adjTemplates = [
+                        `This is very ${word} today.`,
+                        `The weather looks ${word}.`,
+                        `Everything seems ${word} now.`,
+                        `That idea sounds ${word}.`
+                    ];
+                    return adjTemplates[Math.floor(Math.random() * adjTemplates.length)];
+                }
+            }
+        } catch (error) {
+            console.log('Could not fetch definition for sentence generation');
+        }
+
+        // Return random template
+        return templates[Math.floor(Math.random() * templates.length)];
+    },
+
+    // Check grammar using LanguageTool API
+    async checkGrammar(text) {
+        try {
+            const response = await fetch('https://api.languagetool.org/v2/check', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    text: text,
+                    language: 'en-US'
+                })
+            });
+
+            if (!response.ok) {
+                console.error('Grammar check failed');
+                return { hasErrors: false, errors: [] };
+            }
+
+            const data = await response.json();
+            const matches = data.matches || [];
+
+            // Filter for important errors only (ignore minor style issues)
+            const importantErrors = matches.filter(match => {
+                const issueType = match.rule.issueType;
+                return issueType === 'grammar' ||
+                       issueType === 'misspelling' ||
+                       issueType === 'typographical';
+            });
+
+            if (importantErrors.length > 0) {
+                const errorMessages = importantErrors.map(match => match.message);
+                return {
+                    hasErrors: true,
+                    errors: errorMessages,
+                    details: importantErrors
+                };
+            }
+
+            return { hasErrors: false, errors: [] };
+
+        } catch (error) {
+            console.error('Grammar check error:', error);
+            // If API fails, don't block the user
+            return { hasErrors: false, errors: [] };
+        }
     }
 };

@@ -169,6 +169,28 @@
                 </button>
             </div>
 
+            <!-- Listening Mode Controls -->
+            <div id="listeningControls" class="mb-3 hidden">
+                <div class="bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                    <div class="flex justify-between items-center gap-3">
+                        <button
+                            id="replayAudioBtn"
+                            onclick="GameManager.replayAudio()"
+                            class="flex-1 px-4 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                            🔊 Nghe lại (<span id="replaysLeft">3</span>)
+                        </button>
+                        <button
+                            id="revealWordBtn"
+                            onclick="GameManager.revealHiddenWord()"
+                            class="flex-1 px-4 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition"
+                        >
+                            👁️ Xem từ (-5 XP)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Hints Section -->
             <div id="hintsContainer" class="mb-3 hidden">
                 <div class="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">

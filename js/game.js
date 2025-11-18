@@ -4,6 +4,8 @@ const GameManager = {
     usedWords: new Set(),
     currentWord: '',
     currentWordHidden: false, // For Listening Blitz mode
+    currentAudioUrl: null, // Store audio URL for replay
+    audioReplaysLeft: 3, // Number of replays allowed
     isPlayerTurn: false,
     playerAttemptsLeft: 3,
     timeLeft: 20,
@@ -184,6 +186,8 @@ const GameManager = {
         this.usedWords.clear();
         this.currentWord = '';
         this.currentWordHidden = false;
+        this.currentAudioUrl = null;
+        this.audioReplaysLeft = 3;
         this.isPlayerTurn = false;
         this.playerAttemptsLeft = 3;
         this.timeLeft = 20;
@@ -204,6 +208,8 @@ const GameManager = {
         document.getElementById('hintBtn').disabled = false;
         document.getElementById('endBtn').disabled = false;
         document.getElementById('hintsContainer').classList.add('hidden');
+        document.getElementById('listeningControls').classList.add('hidden');
+        document.getElementById('replaysLeft').textContent = '3';
         UIManager.updateAttemptsDisplay(3);
         UIManager.updateTimerDisplay(20);
         AudioManager.play('submit');
@@ -335,22 +341,52 @@ const GameManager = {
             // Handle Listening Blitz Mode
             if (this.currentGameMode === 'listening') {
                 this.currentWordHidden = true;
+                this.audioReplaysLeft = 3;
+                document.getElementById('replaysLeft').textContent = '3';
+
                 // Display word as stars
                 const hiddenWord = '*'.repeat(aiWord.length);
                 document.getElementById('currentWord').textContent = hiddenWord;
                 document.getElementById('currentTranslation').textContent = '??? (Listen carefully!)';
 
-                // Try to play pronunciation if available
-                const dictResponse = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${aiWord}`);
-                if (dictResponse.ok) {
-                    const dictData = await dictResponse.json();
-                    const audioUrl = dictData[0]?.phonetics?.find(p => p.audio)?.audio;
-                    if (audioUrl) {
-                        const audio = new Audio(audioUrl);
-                        audio.play().catch(err => console.log('Audio play failed:', err));
+                // Try to get and play pronunciation
+                let audioPlayed = false;
+
+                try {
+                    const dictResponse = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${aiWord}`);
+                    if (dictResponse.ok) {
+                        const dictData = await dictResponse.json();
+                        const phonetics = dictData[0]?.phonetics || [];
+
+                        // Try to find audio URL (prefer US pronunciation)
+                        let audioUrl = phonetics.find(p => p.audio && p.audio.includes('-us.mp3'))?.audio;
+                        if (!audioUrl) {
+                            audioUrl = phonetics.find(p => p.audio)?.audio;
+                        }
+
+                        if (audioUrl) {
+                            this.currentAudioUrl = audioUrl;
+                            const audio = new Audio(audioUrl);
+                            await audio.play();
+                            audioPlayed = true;
+                            console.log('Playing audio from Dictionary API:', audioUrl);
+                        }
                     }
+                } catch (error) {
+                    console.log('Dictionary API audio failed:', error);
                 }
 
+                // Fallback: Use Web Speech API (Text-to-Speech)
+                if (!audioPlayed) {
+                    console.log('Using Text-to-Speech fallback');
+                    this.currentAudioUrl = null; // No URL for TTS
+                    this.speakWord(aiWord);
+                }
+
+                // Show listening controls and enable reveal button
+                document.getElementById('listeningControls').classList.remove('hidden');
+                document.getElementById('replayAudioBtn').disabled = false;
+                document.getElementById('revealWordBtn').disabled = false;
                 UIManager.addToHistory(hiddenWord, '??? (Hidden)', 'AI', null);
             } else {
                 UIManager.displayWord(aiWord, aiTranslation);
@@ -595,8 +631,9 @@ const GameManager = {
             // Save to vocabulary
             VocabularyManager.addWord(playerWord, translation);
 
-            // Hide hints
+            // Hide hints and listening controls
             document.getElementById('hintsContainer').classList.add('hidden');
+            document.getElementById('listeningControls').classList.add('hidden');
 
             // Check achievements
             if (playerWord.length >= 8 && !PlayerManager.achievements.long_word.unlocked) {
@@ -794,5 +831,92 @@ const GameManager = {
                 this.restartGame();
             }
         }, 2000);
+    },
+
+    // Text-to-Speech for Listening Mode
+    speakWord(word) {
+        if ('speechSynthesis' in window) {
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.8; // Slower for clarity
+            utterance.pitch = 1;
+            utterance.volume = 1;
+
+            window.speechSynthesis.speak(utterance);
+        } else {
+            console.error('Text-to-Speech not supported');
+            UIManager.showStatus('⚠️ Browser does not support audio playback!', 'error');
+        }
+    },
+
+    // Replay audio in Listening Mode
+    replayAudio() {
+        if (this.audioReplaysLeft <= 0) {
+            UIManager.showStatus('⚠️ Đã hết lượt nghe lại!', 'error');
+            AudioManager.play('error');
+            return;
+        }
+
+        this.audioReplaysLeft--;
+        document.getElementById('replaysLeft').textContent = this.audioReplaysLeft;
+
+        if (this.audioReplaysLeft === 0) {
+            document.getElementById('replayAudioBtn').disabled = true;
+        }
+
+        // Play audio
+        if (this.currentAudioUrl) {
+            // Play from URL
+            const audio = new Audio(this.currentAudioUrl);
+            audio.play().catch(err => {
+                console.error('Audio replay failed:', err);
+                // Fallback to TTS
+                this.speakWord(this.currentWord);
+            });
+        } else {
+            // Use Text-to-Speech
+            this.speakWord(this.currentWord);
+        }
+
+        AudioManager.play('hint');
+    },
+
+    // Reveal hidden word in Listening Mode
+    revealHiddenWord() {
+        if (!this.currentWordHidden) {
+            return;
+        }
+
+        // Deduct XP
+        if (PlayerManager.data.xp >= 5) {
+            PlayerManager.data.xp -= 5;
+            PlayerManager.updateUI();
+            PlayerManager.save();
+        }
+
+        // Reveal the word
+        this.currentWordHidden = false;
+        document.getElementById('currentWord').textContent = this.currentWord.toUpperCase();
+
+        // Get translation
+        fetch(`https://api.mymemory.translated.net/get?q=${this.currentWord}&langpair=en|vi`)
+            .then(response => response.json())
+            .then(data => {
+                const translation = data.responseData.translatedText;
+                document.getElementById('currentTranslation').textContent = translation;
+            })
+            .catch(err => {
+                console.error('Translation failed:', err);
+                document.getElementById('currentTranslation').textContent = 'Translation unavailable';
+            });
+
+        UIManager.showStatus('👁️ Từ đã được hiển thị (-5 XP)', 'info');
+        AudioManager.play('hint');
+
+        // Disable reveal button
+        document.getElementById('revealWordBtn').disabled = true;
     }
 };

@@ -4,6 +4,43 @@ const VocabularyManager = {
     favorites: new Set(),
     difficult: new Set(),
 
+    // Topic-based word lists for Context Bonus
+    topicWords: {
+        business: [
+            'contract', 'negotiation', 'agreement', 'investment', 'profit', 'revenue',
+            'budget', 'meeting', 'proposal', 'client', 'employee', 'manager',
+            'strategy', 'marketing', 'sales', 'productivity', 'merger', 'acquisition',
+            'deadline', 'presentation', 'report', 'analysis', 'forecast', 'quarterly'
+        ],
+        travel: [
+            'itinerary', 'destination', 'reservation', 'accommodation', 'passport',
+            'boarding', 'departure', 'arrival', 'luggage', 'tourist', 'excursion',
+            'hotel', 'flight', 'ticket', 'customs', 'immigration', 'vacation',
+            'journey', 'adventure', 'sightseeing', 'guide', 'airport', 'terminal'
+        ],
+        general: []
+    },
+
+    // TOEIC common vocabulary list
+    toeicWords: [
+        // Business & Work
+        'contract', 'negotiation', 'agreement', 'investment', 'revenue', 'profit',
+        'budget', 'employee', 'manager', 'colleague', 'supervisor', 'client',
+        'deadline', 'presentation', 'meeting', 'agenda', 'proposal', 'strategy',
+
+        // Travel & Transportation
+        'itinerary', 'destination', 'reservation', 'accommodation', 'departure',
+        'arrival', 'boarding', 'luggage', 'passenger', 'terminal', 'customs',
+
+        // Office & Administration
+        'document', 'file', 'report', 'memo', 'schedule', 'appointment',
+        'invoice', 'receipt', 'payment', 'transaction', 'procedure', 'policy',
+
+        // Communication
+        'conference', 'discussion', 'correspondence', 'inquiry', 'response',
+        'announcement', 'notification', 'message', 'feedback', 'confirmation'
+    ],
+
     init() {
         this.load();
     },
@@ -141,5 +178,16 @@ const VocabularyManager = {
             console.error('Error fetching definition:', error);
             return null;
         }
+    },
+
+    // Check if word is a TOEIC word
+    isTOEICWord(word) {
+        return this.toeicWords.includes(word.toLowerCase());
+    },
+
+    // Check if word matches selected topic
+    matchesTopic(word, topic) {
+        if (topic === 'general') return false; // No bonus for general
+        return this.topicWords[topic]?.includes(word.toLowerCase()) || false;
     }
 };

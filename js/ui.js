@@ -30,7 +30,7 @@ const UIManager = {
     },
 
     // Add word to history
-    addToHistory(word, translation, player, onClick = null) {
+    addToHistory(word, translation, player, onClick = null, sentence = null, bonuses = []) {
         const historyDiv = document.getElementById('history');
         if (document.querySelectorAll('#history > div').length === 0) {
             historyDiv.innerHTML = '';
@@ -43,12 +43,22 @@ const UIManager = {
             entry.onclick = () => onClick(word);
         }
 
+        // Build bonuses badges
+        let bonusesBadges = '';
+        if (bonuses && bonuses.length > 0) {
+            bonusesBadges = `<div class="mt-2 flex gap-1 flex-wrap">${bonuses.map(b =>
+                `<span class="text-xs px-2 py-1 rounded-full ${b.type === 'toeic' ? 'bg-yellow-400 text-yellow-900' : 'bg-blue-400 text-blue-900'} font-semibold">${b.label}</span>`
+            ).join('')}</div>`;
+        }
+
         entry.innerHTML = `
             <div class="flex justify-between items-center">
                 <span class="font-bold text-lg">${word.toUpperCase()}</span>
                 <span class="text-xs text-gray-600">${player}</span>
             </div>
             <div class="text-sm text-gray-700 italic">${translation}</div>
+            ${sentence ? `<div class="text-sm text-gray-600 mt-1">📝 "${sentence}"</div>` : ''}
+            ${bonusesBadges}
         `;
         historyDiv.appendChild(entry);
         historyDiv.scrollTop = historyDiv.scrollHeight;

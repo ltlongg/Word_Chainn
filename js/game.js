@@ -3,12 +3,15 @@ const GameManager = {
     // Game state
     usedWords: new Set(),
     currentWord: '',
+    currentWordHidden: false, // For Listening Blitz mode
     isPlayerTurn: false,
     playerAttemptsLeft: 3,
     timeLeft: 20,
     timerInterval: null,
     gameStartTime: null,
     currentDifficulty: 'easy',
+    currentGameMode: 'classic', // classic, sentence, listening
+    currentTopic: 'general',
     wordsUsedThisGame: 0,
     perfectGame: true,
     gameInProgress: false,
@@ -16,7 +19,11 @@ const GameManager = {
 
     init() {
         this.loadDifficulty();
+        this.loadGameMode();
+        this.loadTopic();
         this.updateDifficultyUI();
+        this.updateGameModeUI();
+        this.updateTopicUI();
     },
 
     loadDifficulty() {
@@ -28,6 +35,111 @@ const GameManager = {
 
     saveDifficulty() {
         localStorage.setItem('gameDifficulty', this.currentDifficulty);
+    },
+
+    loadGameMode() {
+        const saved = localStorage.getItem('gameMode');
+        if (saved) {
+            this.currentGameMode = saved;
+        }
+    },
+
+    saveGameMode() {
+        localStorage.setItem('gameMode', this.currentGameMode);
+    },
+
+    loadTopic() {
+        const saved = localStorage.getItem('gameTopic');
+        if (saved) {
+            this.currentTopic = saved;
+        }
+    },
+
+    saveTopic() {
+        localStorage.setItem('gameTopic', this.currentTopic);
+    },
+
+    setGameMode(mode) {
+        if (this.gameInProgress) {
+            UIManager.showStatus('⚠️ Cannot change mode during game!', 'error');
+            AudioManager.play('error');
+            return;
+        }
+
+        this.currentGameMode = mode;
+        this.saveGameMode();
+        this.updateGameModeUI();
+
+        // Update input placeholder based on mode
+        const input = document.getElementById('wordInput');
+        if (mode === 'sentence') {
+            input.placeholder = 'Enter: Word - Sentence (e.g., Apple - I eat an apple daily)';
+        } else if (mode === 'listening') {
+            input.placeholder = 'Listen to the word and type it...';
+        } else {
+            input.placeholder = 'Nhập từ tiếng Anh...';
+        }
+
+        const modeNames = {
+            classic: 'Classic',
+            sentence: 'Sentence Master',
+            listening: 'Listening Blitz'
+        };
+        UIManager.showStatus(`✓ Mode: ${modeNames[mode]}`, 'success');
+        AudioManager.play('submit');
+    },
+
+    updateGameModeUI() {
+        ['classic', 'sentence', 'listening'].forEach(mode => {
+            const btn = document.getElementById('mode' + mode.charAt(0).toUpperCase() + mode.slice(1));
+            if (btn) {
+                if (mode === this.currentGameMode) {
+                    const colors = {
+                        classic: 'bg-green-500',
+                        sentence: 'bg-blue-500',
+                        listening: 'bg-purple-500'
+                    };
+                    btn.className = `px-6 py-2 rounded-lg font-semibold transition shadow-lg text-white ${colors[mode]}`;
+                } else {
+                    btn.className = 'px-6 py-2 rounded-lg font-semibold transition bg-gray-300 text-gray-700';
+                }
+
+                // Disable buttons when game is in progress
+                btn.disabled = this.gameInProgress;
+                if (this.gameInProgress) {
+                    btn.classList.add('cursor-not-allowed', 'opacity-50');
+                } else {
+                    btn.classList.remove('cursor-not-allowed', 'opacity-50');
+                }
+            }
+        });
+    },
+
+    setTopic(topic) {
+        if (this.gameInProgress) {
+            UIManager.showStatus('⚠️ Cannot change topic during game!', 'error');
+            AudioManager.play('error');
+            return;
+        }
+
+        this.currentTopic = topic;
+        this.saveTopic();
+
+        const topicNames = {
+            general: 'General',
+            business: 'Business',
+            travel: 'Travel'
+        };
+        UIManager.showStatus(`✓ Topic: ${topicNames[topic]}`, 'success');
+        AudioManager.play('submit');
+    },
+
+    updateTopicUI() {
+        const selector = document.getElementById('topicSelector');
+        if (selector) {
+            selector.value = this.currentTopic;
+            selector.disabled = this.gameInProgress;
+        }
     },
 
     setDifficulty(level) {
@@ -71,6 +183,7 @@ const GameManager = {
         this.stopTimer();
         this.usedWords.clear();
         this.currentWord = '';
+        this.currentWordHidden = false;
         this.isPlayerTurn = false;
         this.playerAttemptsLeft = 3;
         this.timeLeft = 20;
@@ -94,9 +207,11 @@ const GameManager = {
         UIManager.updateAttemptsDisplay(3);
         UIManager.updateTimerDisplay(20);
         AudioManager.play('submit');
-        
-        // Update difficulty UI to disable buttons during game
+
+        // Update UI to disable mode/difficulty/topic selection during game
         this.updateDifficultyUI();
+        this.updateGameModeUI();
+        this.updateTopicUI();
 
         const playerStarts = Math.random() < 0.5;
 
@@ -134,9 +249,11 @@ const GameManager = {
         document.getElementById('submitBtn').disabled = true;
         document.getElementById('hintBtn').disabled = true;
         document.getElementById('endBtn').disabled = true;
-        
-        // Update difficulty UI to enable buttons after game ends
+
+        // Update UI to enable buttons after game ends
         this.updateDifficultyUI();
+        this.updateGameModeUI();
+        this.updateTopicUI();
 
         // Count as a loss (no streak break, no stats change)
         UIManager.showStatus('🛑 Ván đấu đã kết thúc. Nhấn "Start Game" để chơi lại!', 'error');
@@ -214,8 +331,31 @@ const GameManager = {
             this.usedWords.add(aiWord);
             this.wordsUsedThisGame++;
             document.getElementById('wordCount').textContent = this.wordsUsedThisGame;
-            UIManager.displayWord(aiWord, aiTranslation);
-            UIManager.addToHistory(aiWord, aiTranslation, 'AI', (word) => UIManager.showWordDefinition(word));
+
+            // Handle Listening Blitz Mode
+            if (this.currentGameMode === 'listening') {
+                this.currentWordHidden = true;
+                // Display word as stars
+                const hiddenWord = '*'.repeat(aiWord.length);
+                document.getElementById('currentWord').textContent = hiddenWord;
+                document.getElementById('currentTranslation').textContent = '??? (Listen carefully!)';
+
+                // Try to play pronunciation if available
+                const dictResponse = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${aiWord}`);
+                if (dictResponse.ok) {
+                    const dictData = await dictResponse.json();
+                    const audioUrl = dictData[0]?.phonetics?.find(p => p.audio)?.audio;
+                    if (audioUrl) {
+                        const audio = new Audio(audioUrl);
+                        audio.play().catch(err => console.log('Audio play failed:', err));
+                    }
+                }
+
+                UIManager.addToHistory(hiddenWord, '??? (Hidden)', 'AI', null);
+            } else {
+                UIManager.displayWord(aiWord, aiTranslation);
+                UIManager.addToHistory(aiWord, aiTranslation, 'AI', (word) => UIManager.showWordDefinition(word));
+            }
 
             // Save to vocabulary
             VocabularyManager.addWord(aiWord, aiTranslation);
@@ -224,7 +364,12 @@ const GameManager = {
             this.currentWord = aiWord;
             document.getElementById('wordInput').disabled = false;
             document.getElementById('submitBtn').disabled = false;
-            UIManager.showStatus(`Đến lượt bạn! Nhập từ bắt đầu bằng "${aiWord.slice(-1).toUpperCase()}"`, 'success');
+
+            if (this.currentGameMode === 'listening') {
+                UIManager.showStatus(`🎧 Listening Mode: Type the word you heard!`, 'success');
+            } else {
+                UIManager.showStatus(`Đến lượt bạn! Nhập từ bắt đầu bằng "${aiWord.slice(-1).toUpperCase()}"`, 'success');
+            }
             this.startTimer();
 
         } catch (error) {
@@ -282,9 +427,9 @@ const GameManager = {
         AudioManager.play('submit');
 
         const input = document.getElementById('wordInput');
-        const playerWord = input.value.trim().toLowerCase();
+        let rawInput = input.value.trim();
 
-        if (!playerWord) {
+        if (!rawInput) {
             UIManager.showStatus('Vui lòng nhập từ!', 'error');
             AudioManager.play('error');
             Animations.shake('wordInput');
@@ -292,7 +437,50 @@ const GameManager = {
             return;
         }
 
-        if (this.currentWord && playerWord[0] !== this.currentWord.slice(-1)) {
+        // Parse input based on game mode
+        let playerWord = '';
+        let sentence = null;
+
+        if (this.currentGameMode === 'sentence') {
+            // Expected format: "Word - Sentence"
+            if (!rawInput.includes(' - ')) {
+                UIManager.showStatus('⚠️ Sentence Mode: Use format "Word - Sentence"', 'error');
+                AudioManager.play('error');
+                Animations.shake('wordInput');
+                this.startTimer();
+                return;
+            }
+
+            const parts = rawInput.split(' - ');
+            playerWord = parts[0].trim().toLowerCase();
+            sentence = parts.slice(1).join(' - ').trim();
+
+            // Validate sentence
+            if (sentence.split(' ').length < 3) {
+                UIManager.showStatus('⚠️ Sentence must have at least 3 words!', 'error');
+                AudioManager.play('error');
+                Animations.shake('wordInput');
+                this.startTimer();
+                return;
+            }
+
+            // Check if sentence contains the word
+            if (!sentence.toLowerCase().includes(playerWord)) {
+                UIManager.showStatus('⚠️ Sentence must contain the word!', 'error');
+                AudioManager.play('error');
+                Animations.shake('wordInput');
+                this.startTimer();
+                return;
+            }
+        } else {
+            playerWord = rawInput.toLowerCase();
+        }
+
+        // Listening Blitz Mode: Check if word matches the hidden word
+        if (this.currentGameMode === 'listening' && this.currentWordHidden) {
+            // Player must guess the exact word AI played
+            // No need to check first letter matching
+        } else if (this.currentWord && playerWord[0] !== this.currentWord.slice(-1)) {
             UIManager.showStatus(`⚠️ Từ phải bắt đầu bằng "${this.currentWord.slice(-1).toUpperCase()}"!`, 'error');
             AudioManager.play('error');
             Animations.shake('wordInput');
@@ -360,8 +548,48 @@ const GameManager = {
             this.wordsUsedThisGame++;
             PlayerManager.data.totalWordsUsed++;
             document.getElementById('wordCount').textContent = this.wordsUsedThisGame;
-            UIManager.displayWord(playerWord, translation);
-            UIManager.addToHistory(playerWord, translation, 'Player', (word) => UIManager.showWordDefinition(word));
+
+            // Reveal word in Listening Blitz mode
+            if (this.currentGameMode === 'listening' && this.currentWordHidden) {
+                UIManager.displayWord(this.currentWord, translation);
+                this.currentWordHidden = false;
+            } else {
+                UIManager.displayWord(playerWord, translation);
+            }
+
+            // Check for bonuses
+            const bonuses = [];
+            let bonusXP = 0;
+
+            // TOEIC Vocabulary Bonus
+            if (VocabularyManager.isTOEICWord(playerWord)) {
+                bonuses.push({ type: 'toeic', label: '🌟 TOEIC Word' });
+                bonusXP += 20; // Double base XP (10 -> 20)
+                AudioManager.play('toeic_bonus');
+                setTimeout(() => {
+                    Animations.fireConfetti();
+                }, 200);
+            }
+
+            // Topic Specialist Bonus
+            if (VocabularyManager.matchesTopic(playerWord, this.currentTopic)) {
+                bonuses.push({ type: 'topic', label: `📚 ${this.currentTopic.charAt(0).toUpperCase() + this.currentTopic.slice(1)} Context` });
+                bonusXP += 15;
+            }
+
+            // Sentence Mode Bonus
+            if (this.currentGameMode === 'sentence') {
+                bonuses.push({ type: 'sentence', label: '✍️ Sentence Bonus' });
+                bonusXP += 10;
+            }
+
+            // Award bonuses
+            if (bonusXP > 0) {
+                PlayerManager.addXP(bonusXP, bonuses.map(b => b.label).join(' + '));
+            }
+
+            // Add to history with sentence and bonuses
+            UIManager.addToHistory(playerWord, translation, 'Player', (word) => UIManager.showWordDefinition(word), sentence, bonuses);
             input.value = '';
 
             // Save to vocabulary
@@ -506,9 +734,11 @@ const GameManager = {
         document.getElementById('hintBtn').disabled = true;
         document.getElementById('endBtn').disabled = true;
         this.gameInProgress = false;
-        
-        // Update difficulty UI to enable buttons after game ends
+
+        // Update UI to enable buttons after game ends
         this.updateDifficultyUI();
+        this.updateGameModeUI();
+        this.updateTopicUI();
 
         PlayerManager.data.totalGames++;
 

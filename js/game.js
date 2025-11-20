@@ -3,12 +3,17 @@ const GameManager = {
     // Game state
     usedWords: new Set(),
     currentWord: '',
+    currentWordHidden: false, // For Listening Blitz mode
+    currentAudioUrl: null, // Store audio URL for replay
+    audioReplaysLeft: 3, // Number of replays allowed
     isPlayerTurn: false,
     playerAttemptsLeft: 3,
     timeLeft: 20,
     timerInterval: null,
     gameStartTime: null,
     currentDifficulty: 'easy',
+    currentGameMode: 'classic', // classic, sentence, listening
+    currentTopic: 'general',
     wordsUsedThisGame: 0,
     perfectGame: true,
     gameInProgress: false,
@@ -16,7 +21,11 @@ const GameManager = {
 
     init() {
         this.loadDifficulty();
+        this.loadGameMode();
+        this.loadTopic();
         this.updateDifficultyUI();
+        this.updateGameModeUI();
+        this.updateTopicUI();
     },
 
     loadDifficulty() {
@@ -28,6 +37,111 @@ const GameManager = {
 
     saveDifficulty() {
         localStorage.setItem('gameDifficulty', this.currentDifficulty);
+    },
+
+    loadGameMode() {
+        const saved = localStorage.getItem('gameMode');
+        if (saved) {
+            this.currentGameMode = saved;
+        }
+    },
+
+    saveGameMode() {
+        localStorage.setItem('gameMode', this.currentGameMode);
+    },
+
+    loadTopic() {
+        const saved = localStorage.getItem('gameTopic');
+        if (saved) {
+            this.currentTopic = saved;
+        }
+    },
+
+    saveTopic() {
+        localStorage.setItem('gameTopic', this.currentTopic);
+    },
+
+    setGameMode(mode) {
+        if (this.gameInProgress) {
+            UIManager.showStatus('⚠️ Cannot change mode during game!', 'error');
+            AudioManager.play('error');
+            return;
+        }
+
+        this.currentGameMode = mode;
+        this.saveGameMode();
+        this.updateGameModeUI();
+
+        // Update input placeholder based on mode
+        const input = document.getElementById('wordInput');
+        if (mode === 'sentence') {
+            input.placeholder = 'Enter: Word - Sentence (e.g., Apple - I eat an apple daily)';
+        } else if (mode === 'listening') {
+            input.placeholder = 'Listen to the word and type it...';
+        } else {
+            input.placeholder = 'Nhập từ tiếng Anh...';
+        }
+
+        const modeNames = {
+            classic: 'Classic',
+            sentence: 'Sentence Master',
+            listening: 'Listening Blitz'
+        };
+        UIManager.showStatus(`✓ Mode: ${modeNames[mode]}`, 'success');
+        AudioManager.play('submit');
+    },
+
+    updateGameModeUI() {
+        ['classic', 'sentence', 'listening'].forEach(mode => {
+            const btn = document.getElementById('mode' + mode.charAt(0).toUpperCase() + mode.slice(1));
+            if (btn) {
+                if (mode === this.currentGameMode) {
+                    const colors = {
+                        classic: 'bg-green-500',
+                        sentence: 'bg-blue-500',
+                        listening: 'bg-purple-500'
+                    };
+                    btn.className = `px-6 py-2 rounded-lg font-semibold transition shadow-lg text-white ${colors[mode]}`;
+                } else {
+                    btn.className = 'px-6 py-2 rounded-lg font-semibold transition bg-gray-300 text-gray-700';
+                }
+
+                // Disable buttons when game is in progress
+                btn.disabled = this.gameInProgress;
+                if (this.gameInProgress) {
+                    btn.classList.add('cursor-not-allowed', 'opacity-50');
+                } else {
+                    btn.classList.remove('cursor-not-allowed', 'opacity-50');
+                }
+            }
+        });
+    },
+
+    setTopic(topic) {
+        if (this.gameInProgress) {
+            UIManager.showStatus('⚠️ Cannot change topic during game!', 'error');
+            AudioManager.play('error');
+            return;
+        }
+
+        this.currentTopic = topic;
+        this.saveTopic();
+
+        const topicNames = {
+            general: 'General',
+            business: 'Business',
+            travel: 'Travel'
+        };
+        UIManager.showStatus(`✓ Topic: ${topicNames[topic]}`, 'success');
+        AudioManager.play('submit');
+    },
+
+    updateTopicUI() {
+        const selector = document.getElementById('topicSelector');
+        if (selector) {
+            selector.value = this.currentTopic;
+            selector.disabled = this.gameInProgress;
+        }
     },
 
     setDifficulty(level) {
@@ -71,6 +185,9 @@ const GameManager = {
         this.stopTimer();
         this.usedWords.clear();
         this.currentWord = '';
+        this.currentWordHidden = false;
+        this.currentAudioUrl = null;
+        this.audioReplaysLeft = 3;
         this.isPlayerTurn = false;
         this.playerAttemptsLeft = 3;
         this.timeLeft = 20;
@@ -91,12 +208,16 @@ const GameManager = {
         document.getElementById('hintBtn').disabled = false;
         document.getElementById('endBtn').disabled = false;
         document.getElementById('hintsContainer').classList.add('hidden');
+        document.getElementById('listeningControls').classList.add('hidden');
+        document.getElementById('replaysLeft').textContent = '3';
         UIManager.updateAttemptsDisplay(3);
         UIManager.updateTimerDisplay(20);
         AudioManager.play('submit');
-        
-        // Update difficulty UI to disable buttons during game
+
+        // Update UI to disable mode/difficulty/topic selection during game
         this.updateDifficultyUI();
+        this.updateGameModeUI();
+        this.updateTopicUI();
 
         const playerStarts = Math.random() < 0.5;
 
@@ -134,9 +255,11 @@ const GameManager = {
         document.getElementById('submitBtn').disabled = true;
         document.getElementById('hintBtn').disabled = true;
         document.getElementById('endBtn').disabled = true;
-        
-        // Update difficulty UI to enable buttons after game ends
+
+        // Update UI to enable buttons after game ends
         this.updateDifficultyUI();
+        this.updateGameModeUI();
+        this.updateTopicUI();
 
         // Count as a loss (no streak break, no stats change)
         UIManager.showStatus('🛑 Ván đấu đã kết thúc. Nhấn "Start Game" để chơi lại!', 'error');
@@ -211,11 +334,85 @@ const GameManager = {
             const transData = await transResponse.json();
             const aiTranslation = transData.responseData.translatedText;
 
+            // Generate sentence for AI in Sentence Mode
+            let aiSentence = null;
+            let aiSentenceTranslation = null;
+
+            if (this.currentGameMode === 'sentence') {
+                aiSentence = await this.generateSentenceForWord(aiWord);
+                if (aiSentence) {
+                    // Translate the sentence
+                    const sentTransResponse = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(aiSentence)}&langpair=en|vi`);
+                    const sentTransData = await sentTransResponse.json();
+                    aiSentenceTranslation = sentTransData.responseData.translatedText;
+                }
+            }
+
             this.usedWords.add(aiWord);
             this.wordsUsedThisGame++;
             document.getElementById('wordCount').textContent = this.wordsUsedThisGame;
-            UIManager.displayWord(aiWord, aiTranslation);
-            UIManager.addToHistory(aiWord, aiTranslation, 'AI', (word) => UIManager.showWordDefinition(word));
+
+            // Handle Listening Blitz Mode
+            if (this.currentGameMode === 'listening') {
+                this.currentWordHidden = true;
+                this.audioReplaysLeft = 3;
+                document.getElementById('replaysLeft').textContent = '3';
+
+                // Display word as stars
+                const hiddenWord = '*'.repeat(aiWord.length);
+                document.getElementById('currentWord').textContent = hiddenWord;
+                document.getElementById('currentTranslation').textContent = '??? (Listen carefully!)';
+
+                // Try to get and play pronunciation
+                let audioPlayed = false;
+
+                try {
+                    const dictResponse = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${aiWord}`);
+                    if (dictResponse.ok) {
+                        const dictData = await dictResponse.json();
+                        const phonetics = dictData[0]?.phonetics || [];
+
+                        // Try to find audio URL (prefer US pronunciation)
+                        let audioUrl = phonetics.find(p => p.audio && p.audio.includes('-us.mp3'))?.audio;
+                        if (!audioUrl) {
+                            audioUrl = phonetics.find(p => p.audio)?.audio;
+                        }
+
+                        if (audioUrl) {
+                            this.currentAudioUrl = audioUrl;
+                            const audio = new Audio(audioUrl);
+                            await audio.play();
+                            audioPlayed = true;
+                            console.log('Playing audio from Dictionary API:', audioUrl);
+                        }
+                    }
+                } catch (error) {
+                    console.log('Dictionary API audio failed:', error);
+                }
+
+                // Fallback: Use Web Speech API (Text-to-Speech)
+                if (!audioPlayed) {
+                    console.log('Using Text-to-Speech fallback');
+                    this.currentAudioUrl = null; // No URL for TTS
+                    this.speakWord(aiWord);
+                }
+
+                // Show listening controls and enable reveal button
+                document.getElementById('listeningControls').classList.remove('hidden');
+                document.getElementById('replayAudioBtn').disabled = false;
+                document.getElementById('revealWordBtn').disabled = false;
+                UIManager.addToHistory(hiddenWord, '??? (Hidden)', 'AI', null);
+            } else {
+                if (this.currentGameMode === 'sentence' && aiSentence) {
+                    // Display sentence translation too
+                    const displayTranslation = `${aiTranslation} | 📝 ${aiSentenceTranslation || aiSentence}`;
+                    UIManager.displayWord(aiWord, displayTranslation);
+                    UIManager.addToHistory(aiWord, aiTranslation, 'AI', (word) => UIManager.showWordDefinition(word), aiSentence, [], aiSentenceTranslation);
+                } else {
+                    UIManager.displayWord(aiWord, aiTranslation);
+                    UIManager.addToHistory(aiWord, aiTranslation, 'AI', (word) => UIManager.showWordDefinition(word));
+                }
+            }
 
             // Save to vocabulary
             VocabularyManager.addWord(aiWord, aiTranslation);
@@ -224,7 +421,12 @@ const GameManager = {
             this.currentWord = aiWord;
             document.getElementById('wordInput').disabled = false;
             document.getElementById('submitBtn').disabled = false;
-            UIManager.showStatus(`Đến lượt bạn! Nhập từ bắt đầu bằng "${aiWord.slice(-1).toUpperCase()}"`, 'success');
+
+            if (this.currentGameMode === 'listening') {
+                UIManager.showStatus(`🎧 Listening Mode: Type the word you heard!`, 'success');
+            } else {
+                UIManager.showStatus(`Đến lượt bạn! Nhập từ bắt đầu bằng "${aiWord.slice(-1).toUpperCase()}"`, 'success');
+            }
             this.startTimer();
 
         } catch (error) {
@@ -282,9 +484,9 @@ const GameManager = {
         AudioManager.play('submit');
 
         const input = document.getElementById('wordInput');
-        const playerWord = input.value.trim().toLowerCase();
+        let rawInput = input.value.trim();
 
-        if (!playerWord) {
+        if (!rawInput) {
             UIManager.showStatus('Vui lòng nhập từ!', 'error');
             AudioManager.play('error');
             Animations.shake('wordInput');
@@ -292,7 +494,76 @@ const GameManager = {
             return;
         }
 
-        if (this.currentWord && playerWord[0] !== this.currentWord.slice(-1)) {
+        // Parse input based on game mode
+        let playerWord = '';
+        let sentence = null;
+
+        if (this.currentGameMode === 'sentence') {
+            // Expected format: "Word - Sentence"
+            if (!rawInput.includes(' - ')) {
+                UIManager.showStatus('⚠️ Sentence Mode: Use format "Word - Sentence"', 'error');
+                AudioManager.play('error');
+                Animations.shake('wordInput');
+                this.startTimer();
+                return;
+            }
+
+            const parts = rawInput.split(' - ');
+            playerWord = parts[0].trim().toLowerCase();
+            sentence = parts.slice(1).join(' - ').trim();
+
+            // Validate sentence
+            if (sentence.split(' ').length < 3) {
+                UIManager.showStatus('⚠️ Sentence must have at least 3 words!', 'error');
+                AudioManager.play('error');
+                Animations.shake('wordInput');
+                this.startTimer();
+                return;
+            }
+
+            // Check if sentence contains the word (word boundary check)
+            const wordRegex = new RegExp(`\\b${playerWord}\\b`, 'i');
+            if (!wordRegex.test(sentence)) {
+                UIManager.showStatus('⚠️ Sentence must contain the word!', 'error');
+                AudioManager.play('error');
+                Animations.shake('wordInput');
+                this.startTimer();
+                return;
+            }
+
+            // Check grammar using LanguageTool API
+            UIManager.showStatus('🔍 Checking grammar...', 'loading');
+            const grammarCheck = await this.checkGrammar(sentence);
+
+            if (grammarCheck.hasErrors) {
+                const errorMsg = `⚠️ Grammar issues found: ${grammarCheck.errors.slice(0, 2).join(', ')}`;
+                UIManager.showStatus(errorMsg, 'error');
+                AudioManager.play('error');
+                Animations.shake('wordInput');
+
+                // Still allow them to continue but show warning
+                setTimeout(() => {
+                    UIManager.showStatus('⚠️ Grammar warning shown. Continue? (Press Submit again)', 'info');
+                }, 2000);
+
+                // Mark that grammar was checked
+                if (!input.dataset.grammarChecked) {
+                    input.dataset.grammarChecked = 'true';
+                    this.startTimer();
+                    return;
+                }
+                // If they press submit again after warning, allow it
+                delete input.dataset.grammarChecked;
+            }
+        } else {
+            playerWord = rawInput.toLowerCase();
+        }
+
+        // Listening Blitz Mode: Check if word matches the hidden word
+        if (this.currentGameMode === 'listening' && this.currentWordHidden) {
+            // Player must guess the exact word AI played
+            // No need to check first letter matching
+        } else if (this.currentWord && playerWord[0] !== this.currentWord.slice(-1)) {
             UIManager.showStatus(`⚠️ Từ phải bắt đầu bằng "${this.currentWord.slice(-1).toUpperCase()}"!`, 'error');
             AudioManager.play('error');
             Animations.shake('wordInput');
@@ -350,6 +621,14 @@ const GameManager = {
             const transData = await transResponse.json();
             const translation = transData.responseData.translatedText;
 
+            // Translate sentence if in Sentence Mode
+            let sentenceTranslation = null;
+            if (this.currentGameMode === 'sentence' && sentence) {
+                const sentTransResponse = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(sentence)}&langpair=en|vi`);
+                const sentTransData = await sentTransResponse.json();
+                sentenceTranslation = sentTransData.responseData.translatedText;
+            }
+
             this.playerAttemptsLeft = 3;
             UIManager.updateAttemptsDisplay(this.playerAttemptsLeft);
             this.stopTimer();
@@ -360,15 +639,62 @@ const GameManager = {
             this.wordsUsedThisGame++;
             PlayerManager.data.totalWordsUsed++;
             document.getElementById('wordCount').textContent = this.wordsUsedThisGame;
-            UIManager.displayWord(playerWord, translation);
-            UIManager.addToHistory(playerWord, translation, 'Player', (word) => UIManager.showWordDefinition(word));
+
+            // Reveal word in Listening Blitz mode
+            if (this.currentGameMode === 'listening' && this.currentWordHidden) {
+                UIManager.displayWord(this.currentWord, translation);
+                this.currentWordHidden = false;
+            } else {
+                if (this.currentGameMode === 'sentence' && sentenceTranslation) {
+                    // Display with sentence translation
+                    const displayTranslation = `${translation} | 📝 ${sentenceTranslation}`;
+                    UIManager.displayWord(playerWord, displayTranslation);
+                } else {
+                    UIManager.displayWord(playerWord, translation);
+                }
+            }
+
+            // Check for bonuses
+            const bonuses = [];
+            let bonusXP = 0;
+
+            // TOEIC Vocabulary Bonus
+            if (VocabularyManager.isTOEICWord(playerWord)) {
+                bonuses.push({ type: 'toeic', label: '🌟 TOEIC Word' });
+                bonusXP += 20; // Double base XP (10 -> 20)
+                AudioManager.play('toeic_bonus');
+                setTimeout(() => {
+                    Animations.fireConfetti();
+                }, 200);
+            }
+
+            // Topic Specialist Bonus
+            if (VocabularyManager.matchesTopic(playerWord, this.currentTopic)) {
+                bonuses.push({ type: 'topic', label: `📚 ${this.currentTopic.charAt(0).toUpperCase() + this.currentTopic.slice(1)} Context` });
+                bonusXP += 15;
+            }
+
+            // Sentence Mode Bonus
+            if (this.currentGameMode === 'sentence') {
+                bonuses.push({ type: 'sentence', label: '✍️ Sentence Bonus' });
+                bonusXP += 10;
+            }
+
+            // Award bonuses
+            if (bonusXP > 0) {
+                PlayerManager.addXP(bonusXP, bonuses.map(b => b.label).join(' + '));
+            }
+
+            // Add to history with sentence and bonuses
+            UIManager.addToHistory(playerWord, translation, 'Player', (word) => UIManager.showWordDefinition(word), sentence, bonuses, sentenceTranslation);
             input.value = '';
 
             // Save to vocabulary
             VocabularyManager.addWord(playerWord, translation);
 
-            // Hide hints
+            // Hide hints and listening controls
             document.getElementById('hintsContainer').classList.add('hidden');
+            document.getElementById('listeningControls').classList.add('hidden');
 
             // Check achievements
             if (playerWord.length >= 8 && !PlayerManager.achievements.long_word.unlocked) {
@@ -506,9 +832,11 @@ const GameManager = {
         document.getElementById('hintBtn').disabled = true;
         document.getElementById('endBtn').disabled = true;
         this.gameInProgress = false;
-        
-        // Update difficulty UI to enable buttons after game ends
+
+        // Update UI to enable buttons after game ends
         this.updateDifficultyUI();
+        this.updateGameModeUI();
+        this.updateTopicUI();
 
         PlayerManager.data.totalGames++;
 
@@ -564,5 +892,190 @@ const GameManager = {
                 this.restartGame();
             }
         }, 2000);
+    },
+
+    // Text-to-Speech for Listening Mode
+    speakWord(word) {
+        if ('speechSynthesis' in window) {
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.8; // Slower for clarity
+            utterance.pitch = 1;
+            utterance.volume = 1;
+
+            window.speechSynthesis.speak(utterance);
+        } else {
+            console.error('Text-to-Speech not supported');
+            UIManager.showStatus('⚠️ Browser does not support audio playback!', 'error');
+        }
+    },
+
+    // Replay audio in Listening Mode
+    replayAudio() {
+        if (this.audioReplaysLeft <= 0) {
+            UIManager.showStatus('⚠️ Đã hết lượt nghe lại!', 'error');
+            AudioManager.play('error');
+            return;
+        }
+
+        this.audioReplaysLeft--;
+        document.getElementById('replaysLeft').textContent = this.audioReplaysLeft;
+
+        if (this.audioReplaysLeft === 0) {
+            document.getElementById('replayAudioBtn').disabled = true;
+        }
+
+        // Play audio
+        if (this.currentAudioUrl) {
+            // Play from URL
+            const audio = new Audio(this.currentAudioUrl);
+            audio.play().catch(err => {
+                console.error('Audio replay failed:', err);
+                // Fallback to TTS
+                this.speakWord(this.currentWord);
+            });
+        } else {
+            // Use Text-to-Speech
+            this.speakWord(this.currentWord);
+        }
+
+        AudioManager.play('hint');
+    },
+
+    // Reveal hidden word in Listening Mode
+    revealHiddenWord() {
+        if (!this.currentWordHidden) {
+            return;
+        }
+
+        // Deduct XP
+        if (PlayerManager.data.xp >= 5) {
+            PlayerManager.data.xp -= 5;
+            PlayerManager.updateUI();
+            PlayerManager.save();
+        }
+
+        // Reveal the word
+        this.currentWordHidden = false;
+        document.getElementById('currentWord').textContent = this.currentWord.toUpperCase();
+
+        // Get translation
+        fetch(`https://api.mymemory.translated.net/get?q=${this.currentWord}&langpair=en|vi`)
+            .then(response => response.json())
+            .then(data => {
+                const translation = data.responseData.translatedText;
+                document.getElementById('currentTranslation').textContent = translation;
+            })
+            .catch(err => {
+                console.error('Translation failed:', err);
+                document.getElementById('currentTranslation').textContent = 'Translation unavailable';
+            });
+
+        UIManager.showStatus('👁️ Từ đã được hiển thị (-5 XP)', 'info');
+        AudioManager.play('hint');
+
+        // Disable reveal button
+        document.getElementById('revealWordBtn').disabled = true;
+    },
+
+    // Generate a simple sentence using the word
+    async generateSentenceForWord(word) {
+        // Simple sentence templates
+        const templates = [
+            `I like ${word} very much.`,
+            `The ${word} is very important.`,
+            `We need ${word} for this task.`,
+            `She uses ${word} every day.`,
+            `This ${word} is really good.`,
+            `Many people love ${word}.`,
+            `You should try ${word}.`,
+            `They bought a new ${word}.`,
+            `My favorite ${word} is here.`,
+            `Everyone needs ${word}.`
+        ];
+
+        // Try to get definition to make better sentence
+        try {
+            const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+            if (response.ok) {
+                const data = await response.json();
+                const partOfSpeech = data[0]?.meanings[0]?.partOfSpeech;
+
+                // Better templates based on part of speech
+                if (partOfSpeech === 'verb') {
+                    const verbTemplates = [
+                        `People often ${word} in the morning.`,
+                        `I like to ${word} every day.`,
+                        `They ${word} together regularly.`,
+                        `We should ${word} more often.`
+                    ];
+                    return verbTemplates[Math.floor(Math.random() * verbTemplates.length)];
+                } else if (partOfSpeech === 'adjective') {
+                    const adjTemplates = [
+                        `This is very ${word} today.`,
+                        `The weather looks ${word}.`,
+                        `Everything seems ${word} now.`,
+                        `That idea sounds ${word}.`
+                    ];
+                    return adjTemplates[Math.floor(Math.random() * adjTemplates.length)];
+                }
+            }
+        } catch (error) {
+            console.log('Could not fetch definition for sentence generation');
+        }
+
+        // Return random template
+        return templates[Math.floor(Math.random() * templates.length)];
+    },
+
+    // Check grammar using LanguageTool API
+    async checkGrammar(text) {
+        try {
+            const response = await fetch('https://api.languagetool.org/v2/check', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    text: text,
+                    language: 'en-US'
+                })
+            });
+
+            if (!response.ok) {
+                console.error('Grammar check failed');
+                return { hasErrors: false, errors: [] };
+            }
+
+            const data = await response.json();
+            const matches = data.matches || [];
+
+            // Filter for important errors only (ignore minor style issues)
+            const importantErrors = matches.filter(match => {
+                const issueType = match.rule.issueType;
+                return issueType === 'grammar' ||
+                       issueType === 'misspelling' ||
+                       issueType === 'typographical';
+            });
+
+            if (importantErrors.length > 0) {
+                const errorMessages = importantErrors.map(match => match.message);
+                return {
+                    hasErrors: true,
+                    errors: errorMessages,
+                    details: importantErrors
+                };
+            }
+
+            return { hasErrors: false, errors: [] };
+
+        } catch (error) {
+            console.error('Grammar check error:', error);
+            // If API fails, don't block the user
+            return { hasErrors: false, errors: [] };
+        }
     }
 };

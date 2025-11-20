@@ -117,6 +117,23 @@ const AudioManager = {
                 oscillator.start();
                 oscillator.stop(this.context.currentTime + 0.2);
                 break;
+
+            case 'toeic_bonus':
+                // Special triumphant sound for TOEIC words
+                const toeicMelody = [659.25, 783.99, 987.77, 1318.51];
+                toeicMelody.forEach((freq, i) => {
+                    const osc = this.context.createOscillator();
+                    const gain = this.context.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.context.destination);
+                    osc.frequency.value = freq;
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.25, this.context.currentTime + i * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + i * 0.12 + 0.25);
+                    osc.start(this.context.currentTime + i * 0.12);
+                    osc.stop(this.context.currentTime + i * 0.12 + 0.25);
+                });
+                break;
         }
     }
 };

@@ -48,6 +48,32 @@
                 </div>
             </div>
 
+            <!-- Topic Selector -->
+            <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4 mb-4">
+                <p class="text-sm font-semibold text-gray-700 mb-2 text-center">📚 Chủ đề học tập:</p>
+                <select id="topicSelector" onchange="GameManager.setTopic(this.value)" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 font-semibold text-center">
+                    <option value="general">🌍 General (Tổng quát)</option>
+                    <option value="business">💼 Business (Kinh doanh)</option>
+                    <option value="travel">✈️ Travel (Du lịch)</option>
+                </select>
+            </div>
+
+            <!-- Game Mode Selector -->
+            <div class="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-4 mb-4">
+                <p class="text-sm font-semibold text-gray-700 mb-2 text-center">🎮 Game Mode:</p>
+                <div class="flex gap-3 justify-center mb-3">
+                    <button onclick="GameManager.setGameMode('classic')" id="modeClassic" class="px-6 py-2 rounded-lg font-semibold transition">
+                        📝 Classic
+                    </button>
+                    <button onclick="GameManager.setGameMode('sentence')" id="modeSentence" class="px-6 py-2 rounded-lg font-semibold transition">
+                        ✍️ Sentence Master
+                    </button>
+                    <button onclick="GameManager.setGameMode('listening')" id="modeListening" class="px-6 py-2 rounded-lg font-semibold transition">
+                        🎧 Listening Blitz
+                    </button>
+                </div>
+            </div>
+
             <!-- Difficulty Selector -->
             <div class="bg-gray-50 rounded-xl p-4 mb-4">
                 <p class="text-sm font-semibold text-gray-700 mb-2 text-center">Chế độ AI:</p>
@@ -127,12 +153,42 @@
                     spellcheck="false"
                 >
                 <button
+                    id="micBtn"
+                    onclick="SpeechManager.startListening()"
+                    class="px-4 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    title="Speak to enter word"
+                >
+                    🎤
+                </button>
+                <button
                     id="submitBtn"
                     onclick="GameManager.submitWord()"
                     class="px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                     Submit
                 </button>
+            </div>
+
+            <!-- Listening Mode Controls -->
+            <div id="listeningControls" class="mb-3 hidden">
+                <div class="bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                    <div class="flex justify-between items-center gap-3">
+                        <button
+                            id="replayAudioBtn"
+                            onclick="GameManager.replayAudio()"
+                            class="flex-1 px-4 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                            🔊 Nghe lại (<span id="replaysLeft">3</span>)
+                        </button>
+                        <button
+                            id="revealWordBtn"
+                            onclick="GameManager.revealHiddenWord()"
+                            class="flex-1 px-4 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition"
+                        >
+                            👁️ Xem từ (-5 XP)
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Hints Section -->
@@ -287,12 +343,42 @@
         </div>
     </div>
 
+    <!-- Smart Review Quiz Modal -->
+    <div id="smartReviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="mb-6 text-center">
+                <h2 class="text-3xl font-bold text-indigo-600 mb-2">🎯 Smart Review Quiz</h2>
+                <p class="text-gray-600">Review your difficult words before starting!</p>
+            </div>
+            <div id="quizContent">
+                <!-- Quiz questions will be populated here -->
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button
+                    onclick="SmartReviewManager.skipQuiz()"
+                    class="flex-1 px-6 py-3 bg-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-400 transition"
+                >
+                    Skip for now
+                </button>
+                <button
+                    id="submitQuizBtn"
+                    onclick="SmartReviewManager.submitQuiz()"
+                    class="flex-1 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition"
+                >
+                    Submit Answers
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Load JavaScript Modules -->
     <script src="js/audio.js"></script>
     <script src="js/animations.js"></script>
     <script src="js/vocabulary.js"></script>
     <script src="js/player.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/speech.js"></script>
+    <script src="js/smart-review.js"></script>
     <script src="js/game.js"></script>
 
     <!-- Initialize Application -->
@@ -332,8 +418,14 @@
             AudioManager.init();
             VocabularyManager.init();
             PlayerManager.load();
+            SpeechManager.init();
             GameManager.init();
             AudioManager.updateUI();
+
+            // Check for Smart Review after a short delay
+            setTimeout(() => {
+                SmartReviewManager.checkAndShowQuiz();
+            }, 500);
         });
     </script>
 </body>
